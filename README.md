@@ -8,7 +8,7 @@ RETICLE lets a general vision–language model (Qwen3.8-27B, used as released) a
 
 1. **measures** with a mixture of specialized RETICLE experts, one each for lymph-node metastasis sizing, mitosis counting and colorectal polyp grading, built on MUSK and calibrated; a router lets the agent pick the expert, or none, from the image and the question;
 2. **looks closer** at full-resolution views cut where an expert located the finding;
-3. **retrieves evidence** from published case reports, teaching image–caption pairs and NCI PDQ treatment summaries, and cites the exact source sentence for every claim it takes from them;
+3. **retrieves evidence** from published case reports, teaching image–caption pairs and NCI PDQ treatment summaries, and points to the exact source sentence behind every claim it takes from them;
 4. carries the readings, views and evidence through a **multi-turn consultation** (diagnosis → work-up → treatment).
 
 <p align="center"><img src="assets/reticle_walkthrough.gif" width="820" alt="RETICLE on a CAMELYON16-MS test region: expert reading, full-resolution views, retrieved evidence and a cited answer"></p>
@@ -63,7 +63,7 @@ assets/           figures and videos for this README
 docker build -t reticle -f docker/Dockerfile .
 ```
 
-The two runners that load the VLM in-process, `reticle.agent.vlm_qa` and `reticle.agent.region_qa` without `--api_ports`, run inside the vLLM image instead.
+`reticle.agent.vlm_qa` loads the VLM in-process, so it runs inside the vLLM image instead; `reticle.agent.region_qa` calls vLLM servers (`--api_ports`), which its router also uses.
 
 **Models.** MUSK weights are read from the Hugging Face hub (`xiangjx/musk`, revision in `configs/models.json`; accept the model's terms first). The agent talks to an OpenAI-compatible vLLM server:
 
@@ -104,7 +104,7 @@ Every entry point prints its options with `python -m <module> --help`; `tests/` 
 python -m reticle.demo.server --port 8875 --llm-port 8930
 ```
 
-then open `http://127.0.0.1:8875`. The page offers large-image benchmark examples with expert readings (built by `reticle.demo.examples`), published case images, uploads and files from a local folder (`--inputs`); an uploaded breast-cancer field or colorectal polyp region can be read live by the mitosis or polyp expert, chosen by hand or by the router from the case information. The live mitosis expert loads the five fine-tuned detectors written by `reticle.experts.mitosis.crossfit`, so it needs the experts trained first; the polyp expert refits its classifiers on the cached MUSK features of the training regions. Every citation opens its source sentence. The server binds to the loopback interface only.
+then open `http://127.0.0.1:8875`. The page offers large-image benchmark examples with expert readings (built by `reticle.demo.examples`), published case images, uploads and files from a local folder (`--inputs`); an uploaded breast-cancer field or colorectal polyp region can be read live by the mitosis or polyp expert, chosen by hand or by the router from the case information. The live mitosis expert loads the five fine-tuned detectors written by `reticle.experts.mitosis.crossfit`, so it needs the experts trained first; the polyp expert refits its classifiers on the cached MUSK features of the training regions. Every [E] mark opens its source sentence. The server binds to the loopback interface only.
 
 ## Notes
 

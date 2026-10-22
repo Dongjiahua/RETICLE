@@ -30,7 +30,7 @@ LIVE_SPEC = {  # live experts: (tool class name, benchmark set, case context, fi
     'mitosis': ('MitosisTool', 'mdg', 'Invasive breast carcinoma, H&E high-power region (uploaded image, live expert reading).',
                 'How many mitotic figures are in this region, and where are they?', 'uploaded image, RETICLE mitosis expert run live'),
     'polyp': ('PolypTool', 'u8', 'Colorectal polyp biopsy, H&E, a region of up to 800 µm (uploaded image, live expert reading).',
-              'What type of polyp is this? Is the dysplasia low or high grade?', 'uploaded image, RETICLE polyp expert (mixture of fine-tuned MUSK experts) run live')}
+              'What type of polyp is this? Is the dysplasia low or high grade?', 'uploaded image, RETICLE polyp expert (mixture of seven MUSK experts) run live')}
 
 
 def main():

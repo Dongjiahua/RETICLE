@@ -3,9 +3,9 @@
 All commands run from the repository root with `RETICLE_DATA` pointing to the data root (see README). Answers are written next to
 each benchmark under `$RETICLE_DATA/runs/<benchmark>/`; scores go to `$RETICLE_DATA/results/`. GPU steps need a vLLM server of
 Qwen3.8-27B (or of LLaVA-Med / Quilt-LLaVA for those baselines) on the given ports; scoring runs on the CPU from the stored answers.
-`reticle.agent.vlm_qa`, and `reticle.agent.region_qa` without `--api_ports`, load the VLM in-process with vLLM, so they run inside the
-vLLM image (`vllm/vllm-openai:v0.31.0`, see README) rather than the runtime image; with `--api_ports` region_qa only needs the runtime
-image and running servers.
+`reticle.agent.vlm_qa` loads the VLM in-process with vLLM, so it runs inside the vLLM image (`vllm/vllm-openai:v0.31.0`, see README)
+rather than the runtime image. `reticle.agent.region_qa` calls running servers (`--api_ports`, also used by its router), so it only needs
+the runtime image.
 
 Every system has one arm per benchmark:
 

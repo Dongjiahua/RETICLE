@@ -102,15 +102,15 @@ details.evs{margin-top:12px}details.evs summary,details.more summary{cursor:poin
 <button class="go" id="start">Start consultation</button>
 <button class="link" id="reset">New consultation</button>
 <p class="muted" id="stats" style="margin-top:14px"></p>
-<p class="muted">Flow: RETICLE experts (fine-tuned MUSK) → full-resolution views where they point → retrieval of published cases, teaching captions and NCI PDQ → the RETICLE agent (VLM backbone Qwen3.8-27B) answers over several turns; every citation points to a numbered source sentence.</p>
+<p class="muted">Flow: a router picks a RETICLE expert (a mixture of specialized experts) → full-resolution views where it points → retrieval of published cases, teaching captions and NCI PDQ → the RETICLE agent (VLM backbone Qwen3.8-27B) answers over several turns; every [E] mark points to a numbered source sentence.</p>
 </aside><main>
 <div id="intro" class="card"><div class="hero"><div>
 <h1>RETICLE: one agent that <span>calls expert tools</span> for many pathology tasks</h1>
-<p>Pick a large-image example or a case image on the left, or upload an image. Then keep asking: diagnosis and differential, immunohistochemistry, staging, treatment and follow-up. Each turn adds new literature evidence; click a citation to open its source sentence.</p>
+<p>Pick a large-image example or a case image on the left, or upload an image. Then keep asking: diagnosis and differential, immunohistochemistry, staging, treatment and follow-up. Each turn adds new literature evidence; click an [E] mark to open its source sentence.</p>
 <div class="pills">
-<div class="pill"><i style="background:var(--orange)">1</i><div><b>Measure</b> · RETICLE experts (fine-tuned MUSK) return a calibrated reading and the regions they used</div></div>
+<div class="pill"><i style="background:var(--orange)">1</i><div><b>Measure</b> · a router picks the RETICLE expert, which returns a calibrated reading and the regions it used</div></div>
 <div class="pill"><i style="background:var(--teal)">2</i><div><b>Look closer</b> · full-resolution views where the expert points, each image ≤ 1,024 px</div></div>
-<div class="pill"><i style="background:var(--blue)">3</i><div><b>Retrieve evidence</b> · 98,641 published cases, 591,524 teaching captions and NCI PDQ; citations open their source sentence</div></div>
+<div class="pill"><i style="background:var(--blue)">3</i><div><b>Retrieve evidence</b> · 98,641 published cases, 591,524 teaching captions and NCI PDQ; every [E] mark opens its source sentence</div></div>
 </div>
 <p class="muted">Benchmarks: CAMELYON16-MS · MIDOG-MS · UniToPatho-MS · PathMMU · MultiCaRe-Dx (1,000 published cases, three-turn consultation).</p></div>
 <div><div class="anim"><iframe id="animf" src="/anim/agent_flow.html" title="RETICLE workflow animation" loading="lazy"></iframe></div>
@@ -159,7 +159,7 @@ $('start').onclick=async()=>{
       :'What does this image show? What is the most likely diagnosis? Give the differential and reasons.');
     busy=false;$('start').disabled=false;$('q').value=first;ask();
   }catch(e){busy=false;$('start').disabled=false;const c=el('div','card err','Could not start: '+e.message);$('thread').appendChild(c)}};
-function renderExpert(x){const c=el('div','card');const h=el('h2',null,'RETICLE expert reading');h.appendChild(el('span','badge-tool','measurement · not a literature citation'));c.appendChild(h);const g=el('div','expert');
+function renderExpert(x){const c=el('div','card');const h=el('h2',null,'RETICLE expert reading');h.appendChild(el('span','badge-tool','measurement · not literature evidence'));c.appendChild(h);const g=el('div','expert');
   const ov=el('div','ov');const i=el('img');i.src='/large/'+x.id+'/overview.png';ov.appendChild(i);
   i.onload=()=>x.boxes.forEach(b=>{const d=el('div','box');d.style.left=b[0]/10+'%';d.style.top=b[1]/10+'%';d.style.width=Math.max(1.5,(b[2]-b[0])/10)+'%';d.style.height=Math.max(1.5,(b[3]-b[1])/10)+'%';ov.appendChild(d)});
   g.appendChild(ov);const r=el('div');if(x.summary){r.appendChild(el('div','xsum',x.summary));const dd=el('details','xdet');dd.appendChild(el('summary',null,'Expert output in full'));dd.appendChild(el('div','xtext',x.expert_text));r.appendChild(dd)}else r.appendChild(el('div','xtext',x.expert_text));const cr=el('div','crops');
@@ -195,8 +195,8 @@ async function ask(){
       if(miss.length){det.appendChild(el('h3',null,'Information still needed'));const ul=el('ul','small');miss.forEach(o=>ul.appendChild(el('li',null,o)));det.appendChild(ul)}
       if(!/\[E\d+\.\d+\]/.test(a.answer)&&obs.some(o=>/\[E\d+\.\d+\]/.test(o)))det.open=true;c.appendChild(det)}
     const cited=new Set((a.citations||[]).map(x=>x.id));
-    c.appendChild(el('div','muted',`New evidence this turn: ${d.new_evidence.length} · valid citations: ${cited.size}${a.invalid_citations&&a.invalid_citations.length?' · invalid citations removed: '+a.invalid_citations.length:''} · ${d.seconds} s${d.search_terms&&d.search_terms.length?' · search terms: '+d.search_terms.join(', '):''}`));
-    if(d.new_evidence.length){const det=el('details','evs');det.appendChild(el('summary',null,'Evidence of this turn (click a citation to jump to its sentence)'));const g=el('div','grid');const isC=e=>[...cited].some(c=>c.startsWith(e.evidence_id+'.'));[...d.new_evidence].sort((x,y)=>isC(y)-isC(x)).forEach(e=>{const cc=evCard(e,cited);if(!isC(e))cc.classList.add('dim');g.appendChild(cc)});det.appendChild(g);c.appendChild(det)}
+    c.appendChild(el('div','muted',`New evidence this turn: ${d.new_evidence.length} · evidence marks: ${cited.size}${a.invalid_citations&&a.invalid_citations.length?' · unsupported marks removed: '+a.invalid_citations.length:''} · ${d.seconds} s${d.search_terms&&d.search_terms.length?' · search terms: '+d.search_terms.join(', '):''}`));
+    if(d.new_evidence.length){const det=el('details','evs');det.appendChild(el('summary',null,'Evidence of this turn (click an [E] mark to jump to its sentence)'));const g=el('div','grid');const isC=e=>[...cited].some(c=>c.startsWith(e.evidence_id+'.'));[...d.new_evidence].sort((x,y)=>isC(y)-isC(x)).forEach(e=>{const cc=evCard(e,cited);if(!isC(e))cc.classList.add('dim');g.appendChild(cc)});det.appendChild(g);c.appendChild(det)}
     document.querySelectorAll('.sents span').forEach(sp=>{const card=sp.closest('.ev');if(!card)return;const id=Object.keys(EV).find(k=>EV[k]===card);if(id&&cited.has(id+'.'+sp.dataset.k))sp.classList.add('cited')});
     t.appendChild(c);setSugg(a.follow_up_questions);
   }catch(e){wait.className='thinking err';wait.textContent='Error: '+e.message}
