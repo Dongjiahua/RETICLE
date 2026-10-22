@@ -1,0 +1,76 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>RETICLE tool interface</title>
+<style>
+  @font-face{font-family:Arimo;src:url(assets/fonts/Arimo.ttf)}
+  html,body{margin:0;background:#ffffff;overflow:hidden;font-family:Arimo,Arial,Helvetica,sans-serif}
+  #stage{position:relative;width:1920px;height:1080px;background:#ffffff}
+  canvas{position:absolute;left:0;top:0}
+  .tool{position:absolute;width:330px;background:#ffffff;border:3px solid #CBD5E1;border-radius:16px;padding:16px 20px;box-shadow:0 8px 26px rgba(20,33,61,0.08)}
+  .tool h3{margin:0 0 8px 0;font-size:28px;color:#14213D}
+  .tool p{margin:0;font-size:22px;color:#5B6577;line-height:1.35}
+  .tool.measure{border-color:#E8590C} .tool.view{border-color:#0F766E} .tool.evid{border-color:#2563EB}
+  #contract{position:absolute;left:50%;top:60px;transform:translateX(-50%);font-size:30px;color:#14213D;white-space:nowrap}
+  #contract span{color:#0F766E;font-weight:700}
+  #vlm{position:absolute;font-size:34px;color:#ffffff;font-weight:700;text-align:center;width:240px;line-height:1.1}
+  #vlm span{display:block;font-size:22px;font-weight:400}
+</style></head>
+<body><div id="stage">
+  <div id="contract">One contract for every tool: <span>card</span> · <span>calibrated probabilities</span> · <span>regions</span></div>
+  <div class="tool measure" id="k0"><h3>Metastasis segmenter</h3><p>dense MUSK token segmentation<br>5 cross-fitted models</p></div>
+  <div class="tool measure" id="k1"><h3>Mitosis detector</h3><p>cross-fitted MUSK detectors<br>calibrated count</p></div>
+  <div class="tool measure" id="k2"><h3>Polyp grader</h3><p>mixture of 7 MUSK experts<br>3 magnifications</p></div>
+  <div class="tool view" id="k3"><h3>Look-closer tool</h3><p>full-resolution fields<br>at the tool’s regions</p></div>
+  <div class="tool evid" id="k4"><h3>Evidence retrieval</h3><p>98,641 cases · 591,524 captions<br>22,027 NCI PDQ passages</p></div>
+  <div id="vlm">RETICLE<span>VLM 27B</span></div>
+</div>
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+const W = 1920, H = 1080, stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.setClearColor(0xffffff, 1); stage.prepend(renderer.domElement);
+const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(35, W/H, 0.1, 100); camera.position.set(0, 0, 11); camera.updateMatrixWorld();
+const clamp = (x, a=0, b=1) => Math.min(b, Math.max(a, x)), ease = x => { x = clamp(x); return x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2, 3)/2; };
+const ramp = (t, a, b) => ease((t-a)/(b-a));
+const TEAL = 0x0F766E, ORANGE = 0xE8590C, BLUE = 0x2563EB;
+const center = new THREE.Vector3(0, -0.25, 0);
+const agent = new THREE.Group(); agent.position.copy(center); scene.add(agent);
+const ico = new THREE.Mesh(new THREE.IcosahedronGeometry(1.0, 1), new THREE.MeshBasicMaterial({color: TEAL, wireframe: true}));
+const core = new THREE.Mesh(new THREE.SphereGeometry(0.62, 40, 40), new THREE.MeshBasicMaterial({color: TEAL}));
+const halo = new THREE.Mesh(new THREE.RingGeometry(1.18, 1.24, 80), new THREE.MeshBasicMaterial({color: TEAL, transparent: true, opacity: 0.5}));
+agent.add(ico, core, halo);
+// slots: angle around the agent (deg), tool color
+const SLOTS = [[150, ORANGE], [180, ORANGE], [210, ORANGE], [24, TEAL], [-24, BLUE]];
+const R = 4.3, slotPos = a => new THREE.Vector3(center.x + R*Math.cos(a*Math.PI/180)*0.86, center.y + R*Math.sin(a*Math.PI/180)*0.74, 0);
+const links = SLOTS.map(([a, c]) => {
+  const geo = new THREE.BufferGeometry().setFromPoints([slotPos(a), center]);
+  const line = new THREE.Line(geo, new THREE.LineDashedMaterial({color: c, dashSize: 0.12, gapSize: 0.08, transparent: true, opacity: 0}));
+  line.computeLineDistances(); scene.add(line);
+  const dots = [0, 1, 2].map(() => { const m = new THREE.Mesh(new THREE.SphereGeometry(0.07, 16, 16), new THREE.MeshBasicMaterial({color: c, transparent: true, opacity: 0})); scene.add(m); return m; });
+  return {line, dots, a};
+});
+const el = id => document.getElementById(id);
+const toScreen = v => { const p = v.clone().project(camera); return [(p.x+1)/2*W, (1-p.y)/2*H]; };
+function placeCard(id, v, alpha, dx=0) {
+  const e = el(id), [x, y] = toScreen(v); e.style.opacity = alpha; e.style.left = (x - 185 + dx)+'px'; e.style.top = (y - 70)+'px';
+}
+export const DURATION = 8;
+function renderAt(t) {
+  ico.rotation.y = 0.6*t; ico.rotation.x = 0.25*t; const pulse = 1 + 0.05*Math.sin(t*4); core.scale.set(pulse, pulse, pulse);
+  halo.material.opacity = 0.35 + 0.2*Math.sin(t*3);
+  links.forEach((L, k) => {
+    const show = ramp(t, 0.4 + 0.3*k, 1.0 + 0.3*k);
+    L.line.material.opacity = 0.75*show;
+    L.dots.forEach((d, j) => { const ph = ((t*0.45 + j/3) % 1); d.position.copy(slotPos(L.a).lerp(center, ph)); d.material.opacity = show; });
+  });
+  for (let k = 0; k < 5; k++) placeCard('k'+k, slotPos(SLOTS[k][0]), ramp(t, 0.3 + 0.3*k, 0.9 + 0.3*k));
+  const v = el('vlm'), [vx, vy] = toScreen(center); v.style.left = (vx - 120)+'px'; v.style.top = (vy - 34)+'px';
+  el('contract').style.opacity = ramp(t, 0.1, 0.6);
+  renderer.render(scene, camera);
+}
+window.renderAt = renderAt; window.DURATION = DURATION; window.ready = true;
+if (!new URLSearchParams(location.search).has('frames')) {   // live mode: scale the 1920x1080 stage to the frame
+  const fit = () => { const k = Math.min(innerWidth/1920, innerHeight/1080); stage.style.transformOrigin = '0 0'; stage.style.transform = `scale(${k})`; };
+  addEventListener('resize', fit); fit();
+}
+if (!new URLSearchParams(location.search).has('frames')) { const t0 = performance.now(); (function loop() { renderAt(((performance.now()-t0)/1000) % (DURATION+2)); requestAnimationFrame(loop); })(); }
+</script></body></html>

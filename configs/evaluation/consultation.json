@@ -1,0 +1,13 @@
+{
+ "_comment": "Questions of the reported MultiCaRe-Dx consultations, verbatim (Chinese; the agent answers in the language of the question).",
+ "turns": {
+  "t1": "患者资料：{presentation}\n这是活检/切除标本的 H&E 图像。最可能的诊断是什么？请给出一个最可能的诊断，并列出 2-3 个鉴别诊断及理由。",
+  "t2": "为了确诊，应该做哪些免疫组化、特殊染色或分子检查？预期结果是什么？",
+  "t3": "类似病例通常如何治疗？文献报道的随访和结局如何？"
+ },
+ "english_gloss": {
+  "t1": "Patient information: {presentation}. This is an H&E image of the biopsy / resection specimen. What is the most likely diagnosis? Give one most likely diagnosis and list 2-3 differential diagnoses with reasons.",
+  "t2": "Which immunohistochemistry, special stains or molecular tests should be done to confirm the diagnosis, and what results are expected?",
+  "t3": "How are similar cases usually treated? What follow-up and outcomes are reported in the literature?"
+ }
+}

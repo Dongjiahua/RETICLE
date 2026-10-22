@@ -1,0 +1,22 @@
+# Python 3.11, torch 2.7.1 + CUDA 12.6 (from the base image in docker/Dockerfile)
+timm==0.9.16
+transformers==5.2.0
+huggingface-hub
+safetensors
+einops==0.8.1
+fairscale==0.4.13
+sentencepiece
+numpy
+scipy
+scikit-learn
+pillow==11.3.0
+imagehash==4.3.2
+pyarrow==26.0.0
+beautifulsoup4==4.13.4
+tifffile==2024.8.30
+imagecodecs==2024.6.1
+zarr==2.18.2
+numcodecs==0.13.1
+openslide-bin==4.0.0.6
+openslide-python==1.4.1
+pytest

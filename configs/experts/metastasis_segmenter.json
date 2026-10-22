@@ -1,0 +1,5 @@
+{
+ "description": "Training recipe of the RETICLE metastasis expert (reticle/experts/metastasis/segmenter.py): MUSK-V fine-tuned with a per-token tumour head, five slide-grouped folds, two rounds (round 2 adds hard negatives mined from the round-1 out-of-fold maps).",
+ "training": {"epochs": 3, "batch_size": 32, "lr_backbone": 1e-5, "lr_head": 1e-3, "weight_decay": 0.05, "positive_weight_cap": 10.0},
+ "hard_negatives": {"min_probability": 0.8, "tumour_margin_tokens": 5, "per_slide": 20}
+}

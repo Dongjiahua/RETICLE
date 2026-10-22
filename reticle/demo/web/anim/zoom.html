@@ -1,0 +1,62 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>RETICLE look closer</title>
+<style>
+  @font-face{font-family:Arimo;src:url(assets/fonts/Arimo.ttf)}
+  html,body{margin:0;background:#ffffff;overflow:hidden;font-family:Arimo,Arial,Helvetica,sans-serif}
+  #stage{position:relative;width:1920px;height:1080px;background:#ffffff;overflow:hidden}
+  canvas{position:absolute;left:0;top:0}
+  .tag{position:absolute;left:96px;font-size:34px;color:#14213D;background:rgba(255,255,255,0.92);padding:10px 18px;border-radius:12px;border:2px solid #D5DCE3}
+  .tag b{color:#0F766E}
+  #bar{position:absolute;right:120px;bottom:96px;text-align:center;font-size:30px;color:#14213D;background:rgba(255,255,255,0.92);padding:12px 18px 10px;border-radius:12px}
+  #barline{height:10px;background:#14213D;margin:0 auto 8px auto;border-radius:2px}
+  #res{position:absolute;right:120px;top:70px;font-size:32px;color:#14213D;background:rgba(255,255,255,0.92);padding:10px 18px;border-radius:12px;border:2px solid #D5DCE3}
+</style></head>
+<body><div id="stage">
+  <div class="tag" id="t1" style="top:70px">The VLM sees the whole region, <b>downsampled</b></div>
+  <div class="tag" id="t2" style="top:150px">The RETICLE expert finds the tumour <b>(orange)</b></div>
+  <div class="tag" id="t3" style="top:230px">RETICLE shows it at <b>full resolution</b></div>
+  <div id="res">downsampled overview</div>
+  <div id="bar"><div id="barline"></div><span id="barlab">1 mm</span></div>
+</div>
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+const W = 1920, H = 1080, stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.setClearColor(0xffffff, 1); stage.prepend(renderer.domElement);
+const scene = new THREE.Scene(); const FOV = 35, camera = new THREE.PerspectiveCamera(FOV, W/H, 0.01, 100);
+const loader = new THREE.TextureLoader();
+const tex = (n, smooth=true) => { const t = loader.load('assets/'+n); t.colorSpace = THREE.SRGBColorSpace; if (!smooth) { t.magFilter = THREE.NearestFilter; } return t; };
+const clamp = (x, a=0, b=1) => Math.min(b, Math.max(a, x)), ease = x => { x = clamp(x); return x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2, 3)/2; };
+const ramp = (t, a, b) => ease((t-a)/(b-a));
+const S = 6.0, MM = 4.64;   // plane size in world units; region width in mm (CAMELYON16-MS region C16_test_110, 10,240 px at 0.453 um/px)
+const base = new THREE.Mesh(new THREE.PlaneGeometry(S, S), new THREE.MeshBasicMaterial({map: tex('pipe_c16_overview.png', false)})); scene.add(base);
+const heat = new THREE.Mesh(new THREE.PlaneGeometry(S, S), new THREE.MeshBasicMaterial({map: tex('pipe_c16_expert.png', false), transparent: true, opacity: 0}));
+heat.position.z = 0.001; scene.add(heat);
+// field 0 of the tool (0-1000 box [420, 394, 705, 664]) shown as a 768-native-px window = 768/10240 of the width
+const roi = [420, 394, 705, 664], cx = ((roi[0]+roi[2])/2000-0.5)*S, cy = (0.5-(roi[1]+roi[3])/2000)*S, FW = S*768/10240;
+const field = new THREE.Mesh(new THREE.PlaneGeometry(FW, FW), new THREE.MeshBasicMaterial({map: tex('pipe_c16_crop0.png'), transparent: true, opacity: 0}));
+field.position.set(cx, cy, 0.002); scene.add(field);
+const edge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(FW, FW)), new THREE.LineBasicMaterial({color: 0x0F766E, transparent: true, opacity: 0}));
+edge.position.set(cx, cy, 0.003); scene.add(edge);
+const el = id => document.getElementById(id);
+const NICE = [2, 1, 0.5, 0.2, 0.1, 0.05, 0.02];   // mm
+export const DURATION = 8;
+function renderAt(t) {
+  const z = ramp(t, 2.6, 6.2), d0 = 11, d1 = 0.95, d = d0*Math.pow(d1/d0, z);
+  camera.position.set(cx*z, cy*z, d); camera.lookAt(cx*z, cy*z, 0);
+  heat.material.opacity = 0.95*ramp(t, 1.2, 2.0)*(1-0.85*ramp(t, 4.6, 5.6));
+  field.material.opacity = ramp(t, 4.4, 5.6); edge.material.opacity = 0.9*ramp(t, 5.4, 6.0);
+  renderer.render(scene, camera);
+  const viewW = 2*d*Math.tan(FOV/2*Math.PI/180)*W/H, mmPerPx = viewW/S*MM/W;
+  el('res').textContent = (field.material.opacity > 0.5 ? 'full resolution' : 'downsampled overview');
+  const L = NICE.find(v => v/mmPerPx < 320) ?? 0.02; el('barline').style.width = (L/mmPerPx).toFixed(0)+'px'; el('barlab').textContent = L >= 1 ? `${L} mm` : `${Math.round(L*1000)} µm`;
+  el('t1').style.opacity = ramp(t, 0.2, 0.8); el('t2').style.opacity = ramp(t, 1.4, 2.0); el('t3').style.opacity = ramp(t, 4.6, 5.4);
+}
+window.renderAt = renderAt; window.DURATION = DURATION;
+THREE.DefaultLoadingManager.onLoad = () => { window.ready = true; };
+if (!new URLSearchParams(location.search).has('frames')) {   // live mode: scale the 1920x1080 stage to the frame
+  const fit = () => { const k = Math.min(innerWidth/1920, innerHeight/1080); stage.style.transformOrigin = '0 0'; stage.style.transform = `scale(${k})`; };
+  addEventListener('resize', fit); fit();
+}
+if (!new URLSearchParams(location.search).has('frames')) { const t0 = performance.now(); (function loop() { renderAt(((performance.now()-t0)/1000) % (DURATION+2)); requestAnimationFrame(loop); })(); }
+</script></body></html>

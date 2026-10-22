@@ -1,0 +1,5 @@
+{
+ "description": "Round-1 fold-0 mitosis detector (reticle/experts/mitosis/finetune.py): trained on case folds 1-4, the epoch with the best fold-0 AUC against look-alikes is kept.",
+ "training": {"epochs": 4, "batch_size": 32, "lr_backbone": 1e-5, "lr_head": 1e-3, "weight_decay": 0.05},
+ "validation_fold": 0
+}

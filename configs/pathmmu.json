@@ -1,0 +1,10 @@
+{
+ "decontamination": {
+  "visual": "Drop every library image whose MUSK image cosine to any available PathMMU image (all splits) is >= visual_threshold.",
+  "visual_threshold": 0.9,
+  "text": "Drop every library record whose caption shares a normalized word 10-gram with any PathMMU question, option, answer or explanation (all splits).",
+  "text_ngram": 10,
+  "source": "Drop every library image whose source (YouTube video, PubMed figure without subfigure suffix, tweet, TCGA patient) contains an image with MUSK cosine >= source_threshold to any PathMMU image (such pairs were visually identical slides).",
+  "source_threshold": 0.93
+ }
+}

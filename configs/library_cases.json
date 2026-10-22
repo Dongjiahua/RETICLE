@@ -1,0 +1,34 @@
+{
+ "_comment": "MultiCaRe release of the case library (reticle/library/cases.py): the files it reads (bytes, MD5 from the Zenodo record), the chunking of case narratives, the figure view size, and articles left out because their upstream case records are wrong or unusable as one human case.",
+ "zenodo_record": "20416562",
+ "doi": "10.5281/zenodo.20416562",
+ "version": "3.0.1",
+ "files": {
+  "metadata.parquet": {"bytes": 20357281, "md5": "112b1cc572dfd9045faae1a302c40a81"},
+  "cases.parquet": {"bytes": 168061894, "md5": "3d19b916147bc16fd3bdb556546c52a4"},
+  "case_images.parquet": {"bytes": 55281538, "md5": "b2d8a946cc15d54ae2feb811fab5aaec"},
+  "captions_and_labels.csv": {"bytes": 53580945, "md5": "4e78919b2a052022022473802d6b5d80"},
+  "PMC1.zip": {"bytes": 917588785, "md5": "b219bbf447d2df6ce8df003055b79b0b"},
+  "PMC2.zip": {"bytes": 56417976, "md5": "d9744261dfcda559d19fcb76e7219372"},
+  "PMC3.zip": {"bytes": 306922718, "md5": "a3494c94ab31292d3820f0ec278d616c"},
+  "PMC4.zip": {"bytes": 323335697, "md5": "9b39f1c7d52121a2673d4303b3f75f32"},
+  "PMC5.zip": {"bytes": 263654160, "md5": "b5906c65d5bc1eb66aae4e56498968f6"},
+  "PMC6.zip": {"bytes": 275047990, "md5": "9c0f3f46f3309fca52ffd04dd422402f"},
+  "PMC7.zip": {"bytes": 224302517, "md5": "6948625e8dccfd35d03aaab838c8f596"},
+  "PMC8.zip": {"bytes": 237874927, "md5": "6e0628f7259dd47e5edf2adac3cddd08"},
+  "PMC9.zip": {"bytes": 56297273, "md5": "1d5106766d923d6b9f307849ec0c19a9"}
+ },
+ "chunk_characters": 2400,
+ "chunk_overlap": 200,
+ "image_size": 384,
+ "excluded_articles": {
+  "PMC6310926": "several non-human (veterinary) cases in one record",
+  "PMC10159280": "the case text gives conflicting patient sex",
+  "PMC8170123": "the case text gives a conflicting age and timeline",
+  "PMC9465572": "the case text contains an implausible expansion",
+  "PMC10412926": "one patient split into two case records",
+  "PMC10793718": "case boundary error: treatment text of another patient",
+  "PMC11750508": "the case text gives conflicting laboratory results",
+  "PMC8260848": "two patients in one case text"
+ }
+}

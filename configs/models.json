@@ -1,0 +1,16 @@
+{
+ "note": "Pinned model weights. MUSK: https://huggingface.co/xiangjx/musk (gated; accept its licence first). Set RETICLE_MUSK_PATH to use a local copy.",
+ "models": [
+  {
+   "name": "musk",
+   "family": "musk",
+   "id": "xiangjx/musk",
+   "revision": "de1ffed28608c197d2903f6fa42b491a3fbf0fb8",
+   "files": {
+    "model.safetensors": "83d9f2429ec3f04fc3bdc4bc6d8e6c78035ea196fdce9fe05d76ea0e8cad0375",
+    "README.md": "1a0aa80f327910538a0571453d5c0e4a1059a49f3ece62dadbce782c867aea8a",
+    "tokenizer.spm": "6f5e2fefcf793761a76a6bfb8ad35489f9c203b25557673284b6d032f41043f4"
+   }
+  }
+ ]
+}

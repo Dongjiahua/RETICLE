@@ -1,0 +1,189 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>RETICLE agent flow</title>
+<style>
+  @font-face{font-family:Arimo;src:url(assets/fonts/Arimo.ttf)}
+  html,body{margin:0;background:#ffffff;overflow:hidden;font-family:Arimo,Arial,Helvetica,sans-serif}
+  #stage{position:relative;width:1920px;height:1080px;background:#ffffff}
+  canvas{position:absolute;left:0;top:0}
+  .lab{position:absolute;color:#14213D;font-size:30px;white-space:nowrap;transition:none}
+  .step{position:absolute;top:56px;font-size:30px;color:#9AA3AF;letter-spacing:0.5px}
+  .step b{font-weight:700}
+  .step.on{color:#0F766E}
+  .chip{position:absolute;font-size:24px;color:#14213D;background:#F3F6F8;border:2px solid #D5DCE3;border-radius:10px;padding:8px 14px;white-space:nowrap}
+  .card{position:absolute;left:760px;top:420px;width:620px;background:#ffffff;border:3px solid #0F766E;border-radius:18px;padding:26px 30px;box-shadow:0 12px 40px rgba(20,33,61,0.12)}
+  .card h3{margin:0 0 12px 0;font-size:34px;color:#0F766E}
+  .card p{margin:6px 0;font-size:27px;color:#14213D;line-height:1.35}
+  .card .cite{color:#2563EB;font-weight:700;border-radius:6px;padding:0 4px}
+  .card .cite.lit{background:#2563EB;color:#fff}
+  .card .t2{color:#5B6577;font-size:24px;margin-top:10px}
+  .pop{position:absolute;width:1060px;background:#fff;border:3px solid #2563EB;border-radius:16px;padding:18px 24px;box-shadow:0 14px 40px rgba(20,33,61,0.18);opacity:0}
+  .pop .h{font-size:22px;color:#5B6577;margin-bottom:8px}.pop .h b{color:#2563EB;font-size:24px;margin-right:8px}
+  .pop .s{font-size:26px;line-height:1.38;color:#14213D;background:#FFF4C2;border-radius:6px;padding:4px 8px}
+  #cursor{position:absolute;width:44px;height:44px;opacity:0}
+  #ripple{position:absolute;border:4px solid #2563EB;border-radius:50%;opacity:0}
+</style></head>
+<body><div id="stage">
+  <div class="step" id="s1" style="left:120px"><b>1</b>&nbsp; Measure</div>
+  <div class="step" id="s2" style="left:420px"><b>2</b>&nbsp; Look closer</div>
+  <div class="step" id="s3" style="left:740px"><b>3</b>&nbsp; Retrieve evidence</div>
+  <div class="step" id="s4" style="left:1110px"><b>4</b>&nbsp; Reason &amp; answer</div>
+  <div class="lab" id="l_slide">Lymph-node region, 4.6 mm wide</div>
+  <div class="lab" id="l_tool" style="color:#E8590C">RETICLE expert: C (micrometastasis) 77%</div>
+  <div class="lab" id="l_crops" style="color:#0F766E">RETICLE look-closer: full-resolution views</div>
+  <div class="lab" id="l_lib" style="color:#2563EB;font-size:26px">RETICLE evidence: published cases · teaching images · NCI guidelines</div>
+  <div class="lab" id="l_agent" style="color:#0F766E">RETICLE agent</div>
+  <!-- a real deep-mode consultation in the demo on CAMELYON16-MS test region C16_test_110: evidence retrieved in turns 1-2, the turn-1 answer condensed, the citation verbatim -->
+  <div class="chip" id="c1">[E1, E2] published cases · sentinel-node micrometastases</div>
+  <div class="chip" id="c2">[E3–E6] NCI PDQ · breast cancer: TNM, axillary management</div>
+  <div class="card" id="card"><h3>Micrometastasis (category C)</h3>
+    <p>Expert: largest cluster 1,318 µm · C at 77%</p>
+    <p>Views: cohesive carcinoma sheets with pleomorphic nuclei</p>
+    <p class="t2">A similar published case was also a micrometastasis <span class="cite" id="cit">[E2.23]</span></p></div>
+  <div class="pop" id="pop"><div class="h"><b>E2 · sentence 23</b>published case, PMC10630003: Ductal Carcinoma Arising in a Squamous Epithelial Inclusion Cyst withi…</div>
+    <div class="s">“…the nodal disease was classified as metastatic ductal carcinoma of the breast involving a cortical epidermal inclusion cyst of a sentinel lymph node and, based on size, designated as a micrometastasis.”</div></div>
+  <div id="ripple"></div>
+  <svg id="cursor" viewBox="0 0 24 24"><path d="M4 2 L4 20 L9 15.5 L12.5 22 L15.5 20.5 L12 14 L19 14 Z" fill="#14213D" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg>
+</div>
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+const W = 1920, H = 1080, stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({antialias: true, preserveDrawingBuffer: true});
+renderer.setPixelRatio(1); renderer.setSize(W, H); renderer.setClearColor(0xffffff, 1); stage.prepend(renderer.domElement);
+const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(35, W/H, 0.1, 100); camera.position.set(0, 0, 11);
+const loader = new THREE.TextureLoader();
+const tex = n => { const t = loader.load('assets/'+n); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t; };
+const TEAL = 0x0F766E, ORANGE = 0xE8590C, BLUE = 0x2563EB, NAVY = 0x14213D;
+const clamp = (x, a=0, b=1) => Math.min(b, Math.max(a, x)), ease = x => { x = clamp(x); return x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2, 3)/2; };
+const ramp = (t, a, b) => ease((t-a)/(b-a));
+
+// ---- slide with a sweep-revealed tool overlay
+const slide = new THREE.Group(); slide.position.set(-3.55, -0.35, 0); slide.rotation.set(-0.06, 0.34, 0); scene.add(slide);
+const SW = 4.3;
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(SW*1.03, SW*1.03), new THREE.MeshBasicMaterial({color: NAVY, transparent: true, opacity: 0.08}));
+shadow.position.set(0.08, -0.1, -0.02); slide.add(shadow);
+const base = new THREE.Mesh(new THREE.PlaneGeometry(SW, SW), new THREE.MeshBasicMaterial({map: tex('pipe_c16_overview.png')})); slide.add(base);
+const overMat = new THREE.ShaderMaterial({transparent: true, uniforms: {map: {value: tex('pipe_c16_expert.png')}, sweep: {value: 0}},
+  vertexShader: 'varying vec2 vUv; void main(){vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader: 'uniform sampler2D map; uniform float sweep; varying vec2 vUv; void main(){vec4 c=texture2D(map,vUv); float a=1.0-smoothstep(sweep-0.04, sweep, vUv.x); gl_FragColor=vec4(c.rgb,a);\n#include <colorspace_fragment>\n}'});
+const over = new THREE.Mesh(new THREE.PlaneGeometry(SW, SW), overMat); over.position.z = 0.005; slide.add(over);
+const bar = new THREE.Mesh(new THREE.PlaneGeometry(0.035, SW*1.04), new THREE.MeshBasicMaterial({color: TEAL, transparent: true, opacity: 0.9}));
+bar.position.z = 0.02; slide.add(bar);
+const glow = new THREE.Mesh(new THREE.PlaneGeometry(0.5, SW*1.04), new THREE.MeshBasicMaterial({color: TEAL, transparent: true, opacity: 0.12})); glow.position.z = 0.015; slide.add(glow);
+// tool regions (0-1000 coordinates of the overview, from the evidence file of C16_test_110)
+const ROIS = [[420, 394, 705, 664], [630, 428, 664, 467], [422, 442, 450, 475]];
+const local = (x, y) => new THREE.Vector3((x/1000-0.5)*SW, (0.5-y/1000)*SW, 0.03);
+const roiBoxes = ROIS.map(b => {
+  const pad = 14, [x1, y1, x2, y2] = [b[0]-pad, b[1]-pad, b[2]+pad, b[3]+pad];
+  const pts = [local(x1, y1), local(x2, y1), local(x2, y2), local(x1, y2), local(x1, y1)];
+  const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({color: ORANGE, transparent: true, opacity: 0}));
+  slide.add(line); return line;
+});
+const roiCenter = b => { const v = local((b[0]+b[2])/2, (b[1]+b[3])/2); return slide.localToWorld(v.clone()); };
+
+// ---- crop cards fly out of the regions
+const cards = [0, 1, 2].map(k => {
+  const g = new THREE.Group();
+  const frame = new THREE.Mesh(new THREE.PlaneGeometry(1.36, 1.36), new THREE.MeshBasicMaterial({color: 0xffffff}));
+  const border = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.42), new THREE.MeshBasicMaterial({color: TEAL})); border.position.z = -0.01;
+  const sh = new THREE.Mesh(new THREE.PlaneGeometry(1.42, 1.42), new THREE.MeshBasicMaterial({color: NAVY, transparent: true, opacity: 0.1})); sh.position.set(0.06, -0.07, -0.02);
+  const img = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 1.3), new THREE.MeshBasicMaterial({map: tex(`pipe_c16_crop${k}.png`)})); img.position.z = 0.01;
+  g.add(sh, border, frame, img); g.visible = false; scene.add(g); return g;
+});
+const cardTarget = k => new THREE.Vector3(-0.35 + k*1.62, 1.55, 0.6);
+
+// ---- evidence library point cloud
+const N = 2400, pos = new Float32Array(N*3), col = new Float32Array(N*3), rnd = (s => () => (s = (s*16807) % 2147483647)/2147483647)(7);
+const cA = new THREE.Color(0x9DB8D6), cB = new THREE.Color(0xB9C2CC), cC = new THREE.Color(0xF3B38F);
+for (let i = 0; i < N; i++) {
+  const u = rnd(), v = rnd(), r = 1.15*Math.cbrt(rnd()), th = 2*Math.PI*u, ph = Math.acos(2*v-1);
+  pos.set([r*Math.sin(ph)*Math.cos(th)*1.25, r*Math.sin(ph)*Math.sin(th), r*Math.cos(ph)], i*3);
+  const c = i % 13 === 0 ? cC : (i % 3 === 0 ? cB : cA); col.set([c.r, c.g, c.b], i*3);
+}
+const cloudGeo = new THREE.BufferGeometry(); cloudGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); cloudGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+const cloud = new THREE.Points(cloudGeo, new THREE.PointsMaterial({size: 0.045, vertexColors: true, transparent: true, opacity: 0}));
+const lib = new THREE.Group(); lib.position.set(4.35, -1.35, 0); lib.add(cloud); scene.add(lib);
+const hitIdx = [41, 977, 1611], hits = hitIdx.map(i => {   // retrieved in the real run: published cases (teal) and NCI PDQ passages (blue)
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.075, 20, 20), new THREE.MeshBasicMaterial({color: i === 1611 ? BLUE : TEAL, transparent: true, opacity: 0}));
+  m.position.set(pos[i*3], pos[i*3+1], pos[i*3+2]); lib.add(m); return m;
+});
+
+// ---- agent node
+const agent = new THREE.Group(); agent.position.set(4.85, 1.15, 0.3); scene.add(agent);
+const ico = new THREE.Mesh(new THREE.IcosahedronGeometry(0.62, 1), new THREE.MeshBasicMaterial({color: TEAL, wireframe: true, transparent: true, opacity: 0}));
+const core = new THREE.Mesh(new THREE.SphereGeometry(0.3, 32, 32), new THREE.MeshBasicMaterial({color: TEAL, transparent: true, opacity: 0}));
+const halo = new THREE.Mesh(new THREE.RingGeometry(0.75, 0.8, 64), new THREE.MeshBasicMaterial({color: TEAL, transparent: true, opacity: 0}));
+agent.add(ico, core, halo);
+
+// ---- flow lines into the agent
+const flows = [];
+function flow(from, color) {
+  const geo = new THREE.BufferGeometry(); const n = 64; geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(n*3), 3));
+  const line = new THREE.Line(geo, new THREE.LineBasicMaterial({color, transparent: true, opacity: 0.85})); scene.add(line); const f = {line, from, n}; flows.push(f); return f;
+}
+function setFlow(f, a, to) {
+  const p = f.line.geometry.attributes.position, A = f.from(), B = to, m = A.clone().lerp(B, 0.5).add(new THREE.Vector3(0, 0.9, 0.4));
+  const curve = new THREE.QuadraticBezierCurve3(A, m, B); const k = Math.max(2, Math.round(f.n*clamp(a)));
+  for (let i = 0; i < f.n; i++) { const q = curve.getPoint(Math.min(i, k-1)/(f.n-1)); p.setXYZ(i, q.x, q.y, q.z); }
+  p.needsUpdate = true; f.line.visible = a > 0.001;
+}
+const fSlide = flow(() => roiCenter(ROIS[0]), ORANGE), fCrops = [0, 1, 2].map(k => flow(() => cards[k].position.clone(), TEAL));
+const fLib = flow(() => lib.localToWorld(hits[0].position.clone()), BLUE);
+
+// ---- DOM helpers
+const el = id => document.getElementById(id);
+const toScreen = v => { const p = v.clone().project(camera); return [(p.x+1)/2*W, (1-p.y)/2*H]; };
+function place(id, v, dx=0, dy=0, alpha=1, anchor='left') {
+  const e = el(id), [x, y] = toScreen(v); e.style.opacity = alpha; e.style.top = (y+dy)+'px';
+  if (anchor === 'center') { e.style.left = (x+dx)+'px'; e.style.transform = 'translateX(-50%)'; } else { e.style.left = (x+dx)+'px'; e.style.transform = ''; }
+}
+
+export const DURATION = 16;
+function renderAt(t) {
+  // stage 0: slide enters
+  const enter = ramp(t, 0, 1.2); slide.rotation.y = 0.9 - 0.56*enter; slide.position.x = -4.6 + 1.05*enter; base.material.opacity = 1;
+  // stage 1: measure (sweep, overlay, regions)
+  const sw = ramp(t, 1.2, 3.6); overMat.uniforms.sweep.value = sw*1.04; bar.position.x = (sw-0.5)*SW; glow.position.x = bar.position.x - 0.22;
+  bar.material.opacity = sw > 0 && sw < 1 ? 0.9 : 0; glow.material.opacity = sw > 0 && sw < 1 ? 0.12 : 0;
+  roiBoxes.forEach((b, k) => b.material.opacity = ramp(t, 3.4 + 0.15*k, 3.8 + 0.15*k));
+  // stage 2: crops fly out
+  cards.forEach((c, k) => {
+    const a = ramp(t, 4.0 + 0.25*k, 5.4 + 0.25*k); c.visible = a > 0.001;
+    const from = roiCenter(ROIS[k]); c.position.copy(from.clone().lerp(cardTarget(k), a)); const s = 0.08 + 0.92*a; c.scale.set(s, s, s);
+  });
+  // stage 3: evidence library
+  cloud.material.opacity = 0.9*ramp(t, 5.8, 6.6); lib.rotation.y = 0.25*t; lib.rotation.x = 0.1*Math.sin(0.4*t);
+  hits.forEach((h, k) => { const a = ramp(t, 6.8 + 0.3*k, 7.1 + 0.3*k); h.material.opacity = a; const s = 1 + 0.6*Math.sin(Math.max(0, t-7)*5)*Math.exp(-Math.max(0, t-7)); h.scale.set(s, s, s); });
+  // stage 4: reason
+  const ag = ramp(t, 7.9, 8.6); ico.material.opacity = 0.9*ag; core.material.opacity = 0.85*ag; halo.material.opacity = 0.5*ag*(0.6+0.4*Math.sin(t*4));
+  ico.rotation.y = t*0.8; ico.rotation.x = t*0.3; const pulse = 1 + 0.06*Math.sin(t*5)*ag; core.scale.set(pulse, pulse, pulse);
+  const target = agent.position.clone();
+  setFlow(fSlide, ramp(t, 8.4, 9.4), target); fCrops.forEach((f, k) => setFlow(f, ramp(t, 8.6 + 0.15*k, 9.5 + 0.15*k), target)); setFlow(fLib, ramp(t, 9.0, 9.9), target);
+  renderer.render(scene, camera);
+  // overlays
+  ['s1', 's2', 's3', 's4'].forEach((id, k) => el(id).classList.toggle('on', t >= [1.2, 4.0, 5.8, 7.9][k]));
+  place('l_slide', slide.localToWorld(new THREE.Vector3(-SW/2, -SW/2, 0)), 0, 18, ramp(t, 0.6, 1.2));
+  place('l_tool', slide.localToWorld(new THREE.Vector3(-SW/2, SW/2, 0)), 0, -52, ramp(t, 1.6, 2.2));
+  place('l_crops', cardTarget(1).clone().add(new THREE.Vector3(0, 0.95, 0)), 0, -20, ramp(t, 5.2, 5.8), 'center');
+  place('l_lib', lib.position.clone().add(new THREE.Vector3(-1.55, -1.45, 0)), 0, 0, ramp(t, 6.0, 6.6), 'center');
+  place('l_agent', agent.position.clone().add(new THREE.Vector3(0, 0.95, 0)), 0, -20, ramp(t, 8.2, 8.8), 'center');
+  ['c1', 'c2'].forEach((id, k) => place(id, new THREE.Vector3(-0.55, -1.42-0.42*k, 0), 0, 0, ramp(t, 7.0 + 0.3*k, 7.4 + 0.3*k)*(1 - 0.85*ramp(t, 12.5, 12.9))));
+  const cd = ramp(t, 10.0, 10.8); el('card').style.opacity = cd; el('card').style.transform = `translateY(${(1-cd)*30}px)`;
+  el('card').style.display = 'block';
+  // click the citation: its source sentence opens (as in the demo, web/demo4.html)
+  const ci = el('cit'), r = ci.getBoundingClientRect(), sr = stage.getBoundingClientRect(), k0 = sr.width/W, cx = (r.left - sr.left + r.width/2)/k0, cy = (r.top - sr.top + r.height/2)/k0;
+  const cur = el('cursor'), mv = ramp(t, 11.4, 12.3); cur.style.opacity = ramp(t, 11.1, 11.4); cur.style.left = (cx + 300*(1 - mv) - 6) + 'px'; cur.style.top = (cy + 200*(1 - mv) - 4) + 'px';
+  const rp = el('ripple'), rk = Math.min(1, Math.max(0, (t - 12.4)/0.45)), rr = 14 + 46*rk;
+  rp.style.opacity = t > 12.4 && t < 12.85 ? 1 - rk : 0; rp.style.left = (cx - rr) + 'px'; rp.style.top = (cy - rr) + 'px'; rp.style.width = rp.style.height = 2*rr + 'px';
+  ci.className = 'cite' + (t > 12.4 ? ' lit' : '');
+  const pop = el('pop'), pk = ramp(t, 12.6, 13.0); pop.style.opacity = pk; pop.style.left = '520px'; pop.style.top = ((el('card').getBoundingClientRect().bottom - sr.top)/k0 + 18 + 14*(1 - pk)) + 'px';
+}
+window.renderAt = renderAt; window.DURATION = DURATION;
+THREE.DefaultLoadingManager.onLoad = () => { window.ready = true; };
+if (!new URLSearchParams(location.search).has('frames')) {   // live mode: scale the 1920x1080 stage to the frame
+  const fit = () => { const k = Math.min(innerWidth/1920, innerHeight/1080); stage.style.transformOrigin = '0 0'; stage.style.transform = `scale(${k})`; };
+  addEventListener('resize', fit); fit();
+}
+if (!new URLSearchParams(location.search).has('frames')) {   // live mode (demo page): loop in real time
+  const t0 = performance.now(); (function loop() { renderAt(((performance.now()-t0)/1000) % (DURATION+2)); requestAnimationFrame(loop); })();
+}
+</script></body></html>

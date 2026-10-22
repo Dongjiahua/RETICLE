@@ -1,0 +1,8 @@
+{
+ "description": "Training recipe of the RETICLE mitosis expert (reticle/experts/mitosis/crossfit.py): five MUSK-V cell classifiers, each trained without one case fold. Round 2 adds hard negatives and random view offsets; round 3 adds the non-breast MIDOG++ cases.",
+ "training": {"epochs": 3, "batch_size": 32, "lr_backbone": 1e-5, "lr_head": 1e-3, "weight_decay": 0.05},
+ "views": {"crop": 320, "view": 192, "max_offset": 64},
+ "seed_offset": {"2/3": 100},
+ "hard_negatives": {"min_probability": 0.5, "min_distance_px": 64, "per_case": 40},
+ "midogpp": {"first_case": 201, "random_points_per_case": 30}
+}

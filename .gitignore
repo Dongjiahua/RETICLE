@@ -1,0 +1,13 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+data/
+results/
+third_party/
+*.npz
+*.npy
+*.pt
+*.safetensors
+*.sqlite
+*.log
+.env

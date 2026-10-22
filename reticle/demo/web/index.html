@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RETICLE · pathology agent</title>
+<style>
+:root{--ink:#14213D;--muted:#5B6577;--line:#E1E6EB;--teal:#0F766E;--teal2:#0B5C56;--wash:#F2F7F6;--bg:#F6F8FA;--hl:#FFF1B8;--card:#fff;--user:#EAF2FB;--warn:#B3361D;--orange:#E8590C;--blue:#2563EB}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.6 Inter,"Segoe UI",system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:12px 28px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}.brand svg{flex-shrink:0}.brand b{font-size:22px;letter-spacing:.5px;color:var(--ink)}.brand small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.tag{font-size:12px;color:var(--muted);background:var(--wash);border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+.shell{display:grid;grid-template-columns:340px minmax(0,1fr);max-width:1520px;margin:auto}
+aside{background:#fff;border-right:1px solid var(--line);padding:20px;min-height:calc(100vh - 62px)}
+main{padding:22px 30px 160px;min-width:0}
+label,.lbl{display:block;font-size:13px;font-weight:700;margin:16px 0 8px;color:var(--ink)}
+.lbl::before{content:"";display:inline-block;width:6px;height:6px;border-radius:2px;background:var(--teal);margin-right:8px;vertical-align:2px}
+textarea{width:100%;font:inherit;border:1px solid #C9D4DC;border-radius:10px;padding:10px;resize:vertical;background:#fff}
+textarea:focus{outline:2px solid #B7DCD6;border-color:var(--teal)}
+.drop{border:1.5px dashed #9FC5BF;border-radius:12px;background:var(--wash);padding:14px;text-align:center;cursor:pointer;transition:background .2s}
+.drop:hover{background:#E7F2F0}.drop img{max-width:100%;max-height:170px;display:none;margin:0 auto 6px;border-radius:8px}.drop small{color:var(--muted)}
+.ex{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.ex button{padding:2px;border:1px solid var(--line);border-radius:8px;background:#fff;cursor:pointer;transition:transform .15s}
+.ex button:hover,.lg button:hover{transform:translateY(-1px);border-color:#9FC5BF}
+.ex img{width:100%;height:56px;object-fit:cover;display:block;border-radius:6px}.ex button.on,.lg button.on{outline:2px solid var(--teal);outline-offset:1px}
+.lg{display:grid;grid-template-columns:1fr 1fr;gap:8px}.lg button{border:1px solid var(--line);border-radius:10px;background:#fff;cursor:pointer;padding:4px;text-align:left;font:inherit;font-size:12px;transition:transform .15s}
+.lg img{width:100%;height:76px;object-fit:cover;border-radius:7px;display:block}.lg span{display:block;padding:3px 4px;color:var(--muted)}
+button.go{width:100%;margin-top:16px;padding:12px;border:0;border-radius:10px;background:var(--teal);color:#fff;font:inherit;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(15,118,110,.22)}
+button.go:hover{background:var(--teal2)}button.go:disabled{opacity:.55;cursor:wait}.link{background:none;border:0;color:var(--teal);cursor:pointer;font:inherit;font-size:13px;padding:6px 0}
+.muted{color:var(--muted);font-size:12px}.err{color:var(--warn)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(20,33,61,.04)}
+h2{font-size:18px;margin:0 0 10px}h3{font-size:14px;margin:14px 0 6px;color:var(--teal2)}
+.hero{display:grid;grid-template-columns:minmax(0,0.85fr) minmax(0,1.15fr);gap:22px;align-items:center}
+.hero h1{font-size:30px;line-height:1.2;margin:0 0 10px}.hero h1 span{color:var(--teal)}
+.hero p{margin:0 0 12px;color:var(--muted)}
+.pills{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.pill{display:flex;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:14px}
+.pill i{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;color:#fff;font-style:normal;font-weight:700;flex-shrink:0}
+.anim{position:relative;width:100%;aspect-ratio:16/9;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.anim iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tabs{display:flex;gap:6px;margin-top:8px}.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:3px 12px;font:inherit;font-size:12px;cursor:pointer;color:var(--muted)}
+.tabs button.on{background:var(--teal);color:#fff;border-color:var(--teal)}
+.expert{display:grid;grid-template-columns:minmax(240px,400px) 1fr;gap:18px}.ov{position:relative;align-self:start}.xsum{font-size:16px;font-weight:650;color:var(--ink);background:#FFF7F0;border-left:3px solid var(--orange);padding:10px 12px;border-radius:6px}details.xdet{margin-top:8px}details.xdet summary{cursor:pointer;color:var(--muted);font-size:12px}.ov img{width:100%;border-radius:10px;display:block}
+.box{position:absolute;border:2px solid var(--orange);border-radius:3px;pointer-events:none;box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+.crops{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.crops img{width:160px;height:160px;object-fit:cover;border-radius:10px;border:3px solid var(--teal)}
+.xtext{font-size:13px;white-space:pre-wrap;background:#FFF7F0;border-left:3px solid var(--orange);padding:10px 12px;border-radius:6px}
+.badge-tool{display:inline-block;font-size:11px;font-weight:700;color:var(--orange);background:#FFF1E8;border-radius:999px;padding:2px 10px;margin-left:8px;vertical-align:2px}
+.turn{margin-bottom:20px}.q{background:var(--user);border-radius:14px 14px 4px 14px;padding:10px 14px;margin:0 0 10px auto;max-width:80%;width:fit-content}
+.a .answer{font-size:15.5px;line-height:1.8;white-space:pre-wrap}
+.cite{border:0;background:#DDF0EC;color:var(--teal2);border-radius:5px;font-size:11px;font-weight:700;padding:0 5px;margin:0 1px;cursor:pointer;vertical-align:super}
+.cite:hover{background:var(--teal);color:#fff}
+table.dx{border-collapse:collapse;width:100%;font-size:14px}table.dx td,table.dx th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}table.dx th{color:var(--muted);font-weight:600;white-space:nowrap}table.dx td:nth-child(2){white-space:nowrap}table.dx td:first-child{min-width:120px;font-weight:600}
+.lk{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px}.lk.high{background:#DDF0EC;color:var(--teal2)}.lk.medium{background:#FFF1D6;color:#8A5A00}.lk.low{background:#EDF2F4;color:#4F6774}
+ul.small{margin:4px 0;padding-left:20px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}.chips button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;cursor:pointer;font:inherit;font-size:13px}
+.chips button:hover{border-color:var(--teal);color:var(--teal2)}
+details.evs{margin-top:12px}details.evs summary,details.more summary{cursor:pointer;color:var(--teal2);font-size:13px;font-weight:600}details.more{margin-top:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;margin-top:10px}
+.ev{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;transition:box-shadow .2s}.ev.focus{border-color:var(--teal);box-shadow:0 0 0 3px #CBE7E2}
+.ev .top{display:flex;gap:10px;padding:10px}.ev img{width:80px;height:80px;object-fit:cover;border-radius:8px;background:#eee;flex-shrink:0}
+.badge{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px;margin-right:4px;background:#EDF2F4;color:#4F6774}
+.badge.case{background:#DDF0EC;color:var(--teal2)}.badge.nci{background:#E7EEFC;color:#1E4FBF}
+.sents{font-size:13px;max-height:200px;overflow:auto;padding:0 10px 10px;line-height:1.55}.sents span.on{background:var(--hl)}.sents span.cited{border-bottom:2px solid #E5C84A}
+.ev a{color:var(--teal);text-decoration:none;font-size:12px}
+.composer{position:fixed;left:max(340px,calc((100vw - 1520px)/2 + 340px));right:max(0px,calc((100vw - 1520px)/2));bottom:0;background:linear-gradient(180deg,rgba(246,248,250,0),var(--bg) 30%);padding:18px 30px 16px}
+.composer .row{max-width:1120px;display:flex;gap:10px}.composer textarea{min-height:54px;max-height:160px;background:#fff;box-shadow:0 4px 16px rgba(20,33,61,.06)}
+.composer .row button{width:120px;border:0;border-radius:10px;background:var(--teal);color:#fff;font:inherit;font-weight:700;cursor:pointer}.composer .row button:disabled{opacity:.5;cursor:wait}
+.thinking{color:var(--muted);font-size:13px;margin:6px 0 14px;display:flex;align-items:center;gap:10px}
+.thinking .bar{flex:0 0 180px;height:6px;border-radius:999px;background:#E6ECEF;overflow:hidden;position:relative}
+.thinking .bar::after{content:"";position:absolute;left:-40%;width:40%;height:100%;border-radius:999px;background:linear-gradient(90deg,var(--teal),#5EB8AC);animation:slide 1.4s ease-in-out infinite}
+@keyframes slide{0%{left:-40%}100%{left:100%}}
+.tool{margin:8px 0 4px}.tool select{width:100%;font:inherit;font-size:13px;padding:7px;border:1px solid var(--line);border-radius:8px;background:#fff}.tool label{display:block;margin-top:6px;font-size:13px}
+.ref{background:#DDF0EC;border-radius:8px;padding:7px 12px;margin-top:10px;font-size:14px}
+.openf{width:100%;margin-top:8px;padding:8px;border:1px solid #9FC5BF;border-radius:10px;background:#fff;color:var(--teal2);font:inherit;font-size:13px;font-weight:700;cursor:pointer}
+.openf:hover{background:var(--wash)}.fname{font-size:12px;color:var(--muted);margin-top:4px;word-break:break-all}
+.modal{position:fixed;inset:0;background:rgba(20,33,61,.35);display:grid;place-items:center;z-index:50}
+.modal[hidden]{display:none}
+.dlg{width:min(720px,92vw);background:#fff;border-radius:14px;box-shadow:0 20px 50px rgba(20,33,61,.3);overflow:hidden}
+.dlg .hd{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;border-bottom:1px solid var(--line);font-weight:700}
+.dlg .path{display:flex;align-items:center;gap:8px;padding:8px 18px;background:var(--bg);border-bottom:1px solid var(--line);font:13px/1.4 ui-monospace,Menlo,Consolas,monospace;color:var(--ink)}
+.dlg .list{max-height:330px;overflow:auto}.dlg .row{display:grid;grid-template-columns:56px 1fr 110px 80px;gap:12px;align-items:center;padding:7px 18px;border-bottom:1px solid #F0F3F5;cursor:pointer;font-size:13px}
+.dlg .row:hover{background:#F4FAF9}.dlg .row.on{background:#DDF0EC}.dlg .row img{width:56px;height:42px;object-fit:cover;border-radius:5px}.dlg .row span{color:var(--muted)}
+.dlg .ft{display:flex;justify-content:flex-end;gap:10px;padding:12px 18px}.dlg .ft button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 18px;font:inherit;cursor:pointer}
+.dlg .ft button.pri{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}.dlg .ft button.pri:disabled{opacity:.5}
+.toolpick{display:flex;flex-direction:column;gap:5px}.toolpick button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;font:inherit;font-size:12.5px;text-align:left;cursor:pointer;color:var(--ink)}
+.toolpick button.on{border-color:var(--teal);background:#DDF0EC;color:var(--teal2);font-weight:700}
+.a .answer .concl{font-weight:650;margin-bottom:4px}.a .answer .pt{position:relative;padding-left:18px}.a .answer .pt::before{content:"";position:absolute;left:4px;top:.75em;width:6px;height:6px;border-radius:2px;background:var(--teal)}
+.ev.dim{opacity:.5}.ev.dim:hover{opacity:1}
+@media(max-width:1100px){.hero{grid-template-columns:1fr}}
+@media(max-width:900px){.shell{display:block}aside{min-height:0;border-right:0;border-bottom:1px solid var(--line)}main{padding:14px 14px 170px}
+.composer{left:0;padding:14px}.expert{grid-template-columns:1fr}.q{max-width:95%}}
+</style></head><body>
+<header><div class="brand"><svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><circle cx="17" cy="17" r="14" fill="none" stroke="#0F766E" stroke-width="2.5"/><circle cx="17" cy="17" r="4" fill="#E8590C"/><path d="M17 1v8M17 25v8M1 17h8M25 17h8" stroke="#0F766E" stroke-width="2.5" stroke-linecap="round"/></svg><div><b>RETICLE</b><small>General pathology agent · measure · look closer · retrieve evidence</small></div></div><div class="tag">Research prototype for research and teaching, not for clinical diagnosis</div></header>
+<div class="shell"><aside>
+<div class="lbl">1. Choose a starting point</div>
+<div class="drop" id="drop"><img id="preview" alt=""><div id="droptext">Upload a pathology image (PNG / JPEG ≤ 12 MB)</div><small>Small images go to retrieval; large-image examples are below</small></div>
+<input type="file" id="file" accept="image/*" hidden>
+<button class="openf" id="openf">Open from folder…</button><div class="fname" id="fname"></div>
+<div class="tool"><div class="toolpick" id="toolpick"></div><select id="tool" hidden><option value="">No expert (evidence retrieval only)</option><option value="mitosis">Mitosis count · RETICLE mitosis expert (live)</option><option value="polyp">Polyp type &amp; grade · RETICLE polyp expert (live)</option></select>
+<label class="muted" id="mppl" style="display:none"><span>Scan resolution</span> <input id="mpp" type="number" step="0.01" min="0.1" max="2" value="0.25" style="width:70px"> <span>µm/px</span></label></div>
+<div class="lbl">Large-image examples (benchmark test regions)</div><div class="lg" id="lg"></div>
+<div class="lbl">Published case images (their own article is excluded)</div><div class="ex" id="ex"></div>
+<label for="ctx">2. Case information (age, sex, history, site, imaging; optional)</label>
+<textarea id="ctx" style="min-height:70px" placeholder="e.g. 62-year-old woman, 2 cm left breast mass, sentinel lymph node biopsy"></textarea>
+<label class="muted" style="display:block;margin:8px 0"><input type="checkbox" id="think"> <span>Deep thinking (slower and more thorough, about 2–5 min per turn)</span></label>
+<button class="go" id="start">Start consultation</button>
+<button class="link" id="reset">New consultation</button>
+<p class="muted" id="stats" style="margin-top:14px"></p>
+<p class="muted">Flow: RETICLE experts (fine-tuned MUSK) → full-resolution views where they point → retrieval of published cases, teaching captions and NCI PDQ → the RETICLE agent (VLM backbone Qwen3.8-27B) answers over several turns; every citation points to a numbered source sentence.</p>
+</aside><main>
+<div id="intro" class="card"><div class="hero"><div>
+<h1>RETICLE: one agent that <span>calls expert tools</span> for many pathology tasks</h1>
+<p>Pick a large-image example or a case image on the left, or upload an image. Then keep asking: diagnosis and differential, immunohistochemistry, staging, treatment and follow-up. Each turn adds new literature evidence; click a citation to open its source sentence.</p>
+<div class="pills">
+<div class="pill"><i style="background:var(--orange)">1</i><div><b>Measure</b> · RETICLE experts (fine-tuned MUSK) return a calibrated reading and the regions they used</div></div>
+<div class="pill"><i style="background:var(--teal)">2</i><div><b>Look closer</b> · full-resolution views where the expert points, each image ≤ 1,024 px</div></div>
+<div class="pill"><i style="background:var(--blue)">3</i><div><b>Retrieve evidence</b> · 98,641 published cases, 591,524 teaching captions and NCI PDQ; citations open their source sentence</div></div>
+</div>
+<p class="muted">Benchmarks: CAMELYON16-MS · MIDOG-MS · UniToPatho-MS · PathMMU · MultiCaRe-Dx (1,000 published cases, three-turn consultation).</p></div>
+<div><div class="anim"><iframe id="animf" src="/anim/agent_flow.html" title="RETICLE workflow animation" loading="lazy"></iframe></div>
+<div class="tabs"><button class="on" data-a="agent_flow">Workflow</button><button data-a="zoom">Look closer</button><button data-a="tools">Tool interface</button></div></div>
+</div></div>
+<div id="expert"></div><div id="thread"></div>
+</main></div>
+<div class="modal" id="modal" hidden><div class="dlg"><div class="hd"><span>Open image</span><button class="link" id="mclose">✕</button></div><div class="path"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" fill="#F2C14E"/></svg><span id="mpath"></span></div><div class="list" id="mlist"></div><div class="ft"><button id="mcancel">Cancel</button><button class="pri" id="mopen" disabled>Open</button></div></div></div>
+<div class="composer"><div class="row"><textarea id="q" placeholder="Start a consultation on the left, then ask here"></textarea><button id="send" disabled>Send</button></div>
+<div class="chips" id="sugg" style="max-width:1100px"></div></div>
+<script>
+const $=id=>document.getElementById(id);let img=null,exId=null,lgId=null,sid=null,busy=false;const EV={};
+function el(t,c,txt){const n=document.createElement(t);if(c)n.className=c;if(txt!=null)n.textContent=txt;return n}
+const SUGG=['What is the most likely diagnosis? Give the differential and reasons.','Which immunohistochemistry or molecular tests would confirm it, and what results are expected?','What does this finding mean for staging and treatment?','How are similar cases usually treated, and what are the follow-up and prognosis?'];
+function setSugg(list){const s=$('sugg');s.innerHTML='';(list&&list.length?list:SUGG).forEach(t=>{const b=el('button',null,t);b.onclick=()=>{$('q').value=t;ask()};s.appendChild(b)})}
+fetch('/api/info').then(r=>r.json()).then(d=>{
+  $('stats').textContent=`Evidence library: ${d.cases.toLocaleString()} published cases · ${d.case_images.toLocaleString()} case images · ${d.library.toLocaleString()} teaching captions · NCI PDQ summaries`;
+  const setName={c16:'Lymph-node metastasis',mdg:'Mitosis count',u8:'Colorectal polyp'};
+  d.large.forEach(m=>{const b=el('button');const i=el('img');i.src='/large/'+m.id+'/overview.png';i.loading='lazy';b.appendChild(i);b.appendChild(el('span',null,setName[m.set]+' · '+m.id.split('_').slice(-1)[0]));
+    b.title=m.context;b.onclick=()=>{pick('lg',b);lgId=m.id;exId=null;img=null;$('ctx').value=m.context};$('lg').appendChild(b)});
+  d.published.forEach(e=>{const b=el('button');const i=el('img');i.src='/case_image/'+e.file_id;i.loading='lazy';b.appendChild(i);b.title=e.caption||'';
+    b.onclick=()=>{pick('ex',b);exId=e.file_id;lgId=null;img=null};$('ex').appendChild(b)});
+});
+function pick(group,b){document.querySelectorAll('.ex button,.lg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('preview').style.display='none';$('droptext').style.display='block'}
+$('drop').onclick=()=>$('file').click();$('tool').onchange=()=>{$('mppl').style.display=$('tool').value?'block':'none';$('mpp').value=$('tool').value==='polyp'?0.44:0.25};
+$('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(f.size>12e6){alert('The image must be ≤ 12 MB');return}const r=new FileReader();
+  r.onload=()=>useImage(r.result,f.name);r.readAsDataURL(f)};
+function useImage(dataUrl,name){img=dataUrl.split(',')[1];exId=null;lgId=null;$('preview').src=dataUrl;$('preview').style.display='block';$('droptext').style.display='none';
+  $('fname').textContent=name||'';document.querySelectorAll('.ex button,.lg button').forEach(x=>x.classList.remove('on'))}
+let mSel=null;$('openf').onclick=async()=>{const d=await (await fetch('/api/files')).json();$('mpath').textContent=d.folder;const ls=$('mlist');ls.innerHTML='';mSel=null;$('mopen').disabled=true;
+  d.files.forEach(f=>{const r=el('div','row');const i=el('img');i.src='/inputs/thumb/'+encodeURIComponent(f.name);r.appendChild(i);r.appendChild(el('div',null,f.name));
+    r.appendChild(el('span',null,f.width.toLocaleString()+' × '+f.height.toLocaleString()+' px'));r.appendChild(el('span',null,(f.bytes/1e6).toFixed(1)+' MB'));
+    r.onclick=()=>{ls.querySelectorAll('.row').forEach(x=>x.classList.remove('on'));r.classList.add('on');mSel=f.name;$('mopen').disabled=false};r.ondblclick=()=>{mSel=f.name;$('mopen').click()};ls.appendChild(r)});
+  $('modal').hidden=false};
+$('mclose').onclick=$('mcancel').onclick=()=>{$('modal').hidden=true};
+$('mopen').onclick=async()=>{if(!mSel)return;const b=await (await fetch('/inputs/'+encodeURIComponent(mSel))).blob();const r=new FileReader();const name=mSel;r.onload=()=>{useImage(r.result,$('mpath').textContent.replace(/\/$/,'')+'/'+name);$('modal').hidden=true};r.readAsDataURL(b)};
+[...$('tool').options].forEach(o=>{const b=el('button',o.value?'':'on',o.textContent);b.onclick=()=>{$('tool').value=o.value;$('tool').onchange();$('toolpick').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))};$('toolpick').appendChild(b)});
+$('reset').onclick=()=>{sid=null;$('thread').innerHTML='';$('expert').innerHTML='';$('intro').style.display='block';$('send').disabled=true;$('q').placeholder='Start a consultation on the left, then ask here';$('sugg').innerHTML=''};
+$('start').onclick=async()=>{
+  if(busy)return;busy=true;$('start').disabled=true;$('thread').innerHTML='';$('expert').innerHTML='';
+  const body={context:$('ctx').value,think:$('think').checked};if(lgId)body.large_example=lgId;else if(exId)body.example_file_id=exId;else if(img){body.image_base64=img;if($('tool').value){body.expert_tool=$('tool').value;body.um_per_px=+$('mpp').value}}
+  try{const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(d.error)throw new Error(d.error);
+    sid=d.session_id;$('intro').style.display='none';window.scrollTo({top:0,behavior:'smooth'});$('send').disabled=false;$('q').placeholder='Type a question, Enter to send (Shift+Enter for a new line)';
+    if(d.large)renderExpert(d.large);
+    const first=d.large?d.large.question:(body.context?'Based on the image and the case information, what is the most likely diagnosis? Give the differential and reasons.'
+      :'What does this image show? What is the most likely diagnosis? Give the differential and reasons.');
+    busy=false;$('start').disabled=false;$('q').value=first;ask();
+  }catch(e){busy=false;$('start').disabled=false;const c=el('div','card err','Could not start: '+e.message);$('thread').appendChild(c)}};
+function renderExpert(x){const c=el('div','card');const h=el('h2',null,'RETICLE expert reading');h.appendChild(el('span','badge-tool','measurement · not a literature citation'));c.appendChild(h);const g=el('div','expert');
+  const ov=el('div','ov');const i=el('img');i.src='/large/'+x.id+'/overview.png';ov.appendChild(i);
+  i.onload=()=>x.boxes.forEach(b=>{const d=el('div','box');d.style.left=b[0]/10+'%';d.style.top=b[1]/10+'%';d.style.width=Math.max(1.5,(b[2]-b[0])/10)+'%';d.style.height=Math.max(1.5,(b[3]-b[1])/10)+'%';ov.appendChild(d)});
+  g.appendChild(ov);const r=el('div');if(x.summary){r.appendChild(el('div','xsum',x.summary));const dd=el('details','xdet');dd.appendChild(el('summary',null,'Expert output in full'));dd.appendChild(el('div','xtext',x.expert_text));r.appendChild(dd)}else r.appendChild(el('div','xtext',x.expert_text));const cr=el('div','crops');
+  for(let k=0;k<x.crops;k++){const im=el('img');im.src='/large/'+x.id+'/crop_'+k+'.png';im.title='Full-resolution view located by the RETICLE expert '+(k+1);cr.appendChild(im)}
+  r.appendChild(cr);r.appendChild(el('div','muted','Source: '+x.source+'. Orange boxes: regions located by the RETICLE expert; below, the full-resolution views at those regions (also given to the RETICLE agent).'+(x.live?' Live reading, not reviewed by a person.':'')));
+  if(!x.live){const rv=el('button','link','Reveal the reference answer');rv.onclick=async()=>{const d=await (await fetch('/api/reveal/'+sid)).json();rv.replaceWith(el('div','ref','Reference answer: '+d.reference))};r.appendChild(rv)}
+  g.appendChild(r);c.appendChild(g);$('expert').appendChild(c)}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('animf').src='/anim/'+b.dataset.a+'.html'});
+$('send').onclick=ask;$('q').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();ask()}});
+function renderAnswer(parent,text){text=text.replace(/\s+[-•]\s+(?=[A-Z(])/g,'\n- ');const lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean);if(lines.length<2){citeText(parent,text);return}parent.style.whiteSpace='normal';
+  lines.forEach((x,k)=>{const pt=/^[-•*]\s+/.test(x);const d=el('div',pt?'pt':(k===0?'concl':''));citeText(d,pt?x.replace(/^[-•*]\s+/,''):x);parent.appendChild(d)})}
+function citeText(parent,text){const parts=text.split(/(\[E\d+\.\d+\])/);parts.forEach(p=>{const m=p.match(/^\[(E\d+)\.(\d+)\]$/);
+  if(m){const b=el('button','cite',m[1]+'.'+m[2]);b.onclick=()=>focusSent(m[1],+m[2]);parent.appendChild(b)}else parent.appendChild(document.createTextNode(p))})}
+function focusSent(eid,k){const card=EV[eid];if(!card)return;document.querySelectorAll('.ev.focus').forEach(x=>x.classList.remove('focus'));document.querySelectorAll('.sents span.on').forEach(x=>x.classList.remove('on'));
+  let d=card.closest('details');if(d)d.open=true;card.classList.add('focus');const s=card.querySelector('[data-k="'+k+'"]');if(s){s.classList.add('on');s.scrollIntoView({block:'center',behavior:'smooth'})}else card.scrollIntoView({block:'center',behavior:'smooth'})}
+function evCard(e,cited){const c=el('div','ev');EV[e.evidence_id]=c;const top=el('div','top');
+  if(e.image){const i=el('img');i.src=e.image;i.loading='lazy';top.appendChild(i)}const t=el('div');
+  const kind={case:['case','published case'],caption:['','teaching caption'],nci:['nci','NCI PDQ']}[e.kind];t.appendChild(el('span','badge '+kind[0],e.evidence_id+' · '+kind[1]));
+  if(e.kind!=='nci'&&e.similarity)t.appendChild(el('span','badge','similarity '+e.similarity.toFixed(2)));
+  const h=el('div',null);h.style.fontWeight='650';h.style.fontSize='13px';h.textContent=e.title||'';t.appendChild(h);
+  if(e.source_url){const a=el('a',null,'source');a.href=e.source_url;a.target='_blank';a.rel='noopener';t.appendChild(a)}
+  top.appendChild(t);c.appendChild(top);const s=el('div','sents');(e.sentences||[]).forEach((x,k)=>{const sp=el('span',null,x+' ');sp.dataset.k=k+1;if(cited.has(e.evidence_id+'.'+(k+1)))sp.classList.add('cited');s.appendChild(sp)});c.appendChild(s);return c}
+async function ask(){
+  const q=$('q').value.trim();if(!q||!sid||busy)return;busy=true;$('send').disabled=true;$('q').value='';
+  const t=el('div','turn');t.appendChild(el('div','q',q));const wait=el('div','thinking');wait.appendChild(el('div','bar'));const wt=el('span',null,'Retrieving evidence and reasoning… 0 s');wait.appendChild(wt);const t0=Date.now();const tick=setInterval(()=>{if(!wait.isConnected)return clearInterval(tick);wt.textContent='Retrieving evidence and reasoning… '+Math.round((Date.now()-t0)/1000)+' s'},1000);t.appendChild(wait);$('thread').appendChild(t);t.scrollIntoView({block:'end',behavior:'smooth'});
+  try{const r=await fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({session_id:sid,question:q})});const d=await r.json();if(d.error)throw new Error(d.error);
+    wait.remove();const a=d.answer;const c=el('div','card a');const ans=el('div','answer');renderAnswer(ans,a.answer);c.appendChild(ans);
+    if(a.differential&&a.differential.length&&/diagnos|differential|categor|classif/i.test(q)){c.appendChild(el('h3',null,'Differential'));const tb=el('table','dx');const hr=el('tr');['Diagnosis','Likelihood','Reasoning'].forEach(x=>hr.appendChild(el('th',null,x)));tb.appendChild(hr);
+      a.differential.forEach(x=>{const tr=el('tr');tr.appendChild(el('td',null,x.diagnosis));const l=el('td');l.appendChild(el('span','lk '+x.likelihood,x.likelihood));tr.appendChild(l);const rs=el('td');citeText(rs,x.reasoning);tr.appendChild(rs);tb.appendChild(tr)});c.appendChild(tb)}
+    // findings and missing information stay one click away (the answer itself is short); opened when only they carry the citation
+    const obs=a.observations||[],miss=a.missing_information||[];if(obs.length||miss.length){const det=el('details','more');det.appendChild(el('summary',null,`Findings and open questions (${obs.length+miss.length})`));
+      if(obs.length){const ul=el('ul','small');obs.forEach(o=>{const li=el('li');citeText(li,o);ul.appendChild(li)});det.appendChild(ul)}
+      if(miss.length){det.appendChild(el('h3',null,'Information still needed'));const ul=el('ul','small');miss.forEach(o=>ul.appendChild(el('li',null,o)));det.appendChild(ul)}
+      if(!/\[E\d+\.\d+\]/.test(a.answer)&&obs.some(o=>/\[E\d+\.\d+\]/.test(o)))det.open=true;c.appendChild(det)}
+    const cited=new Set((a.citations||[]).map(x=>x.id));
+    c.appendChild(el('div','muted',`New evidence this turn: ${d.new_evidence.length} · valid citations: ${cited.size}${a.invalid_citations&&a.invalid_citations.length?' · invalid citations removed: '+a.invalid_citations.length:''} · ${d.seconds} s${d.search_terms&&d.search_terms.length?' · search terms: '+d.search_terms.join(', '):''}`));
+    if(d.new_evidence.length){const det=el('details','evs');det.appendChild(el('summary',null,'Evidence of this turn (click a citation to jump to its sentence)'));const g=el('div','grid');const isC=e=>[...cited].some(c=>c.startsWith(e.evidence_id+'.'));[...d.new_evidence].sort((x,y)=>isC(y)-isC(x)).forEach(e=>{const cc=evCard(e,cited);if(!isC(e))cc.classList.add('dim');g.appendChild(cc)});det.appendChild(g);c.appendChild(det)}
+    document.querySelectorAll('.sents span').forEach(sp=>{const card=sp.closest('.ev');if(!card)return;const id=Object.keys(EV).find(k=>EV[k]===card);if(id&&cited.has(id+'.'+sp.dataset.k))sp.classList.add('cited')});
+    t.appendChild(c);setSugg(a.follow_up_questions);
+  }catch(e){wait.className='thinking err';wait.textContent='Error: '+e.message}
+  busy=false;$('send').disabled=false;$('q').focus()}
+</script></body></html>
