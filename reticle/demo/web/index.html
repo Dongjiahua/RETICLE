@@ -92,7 +92,7 @@ details.evs{margin-top:12px}details.evs summary,details.more summary{cursor:poin
 <div class="drop" id="drop"><img id="preview" alt=""><div id="droptext">Upload a pathology image (PNG / JPEG ≤ 12 MB)</div><small>Small images go to retrieval; large-image examples are below</small></div>
 <input type="file" id="file" accept="image/*" hidden>
 <button class="openf" id="openf">Open from folder…</button><div class="fname" id="fname"></div>
-<div class="tool"><div class="toolpick" id="toolpick"></div><select id="tool" hidden><option value="">No expert (evidence retrieval only)</option><option value="mitosis">Mitosis count · RETICLE mitosis expert (live)</option><option value="polyp">Polyp type &amp; grade · RETICLE polyp expert (live)</option></select>
+<div class="tool"><div class="toolpick" id="toolpick"></div><select id="tool" hidden><option value="">No expert (evidence retrieval only)</option><option value="auto">Auto · the router picks the expert from the case information</option><option value="mitosis">Mitosis count · RETICLE mitosis expert (live)</option><option value="polyp">Polyp type &amp; grade · RETICLE polyp expert (live)</option></select>
 <label class="muted" id="mppl" style="display:none"><span>Scan resolution</span> <input id="mpp" type="number" step="0.01" min="0.1" max="2" value="0.25" style="width:70px"> <span>µm/px</span></label></div>
 <div class="lbl">Large-image examples (benchmark test regions)</div><div class="lg" id="lg"></div>
 <div class="lbl">Published case images (their own article is excluded)</div><div class="ex" id="ex"></div>
@@ -135,7 +135,7 @@ fetch('/api/info').then(r=>r.json()).then(d=>{
     b.onclick=()=>{pick('ex',b);exId=e.file_id;lgId=null;img=null};$('ex').appendChild(b)});
 });
 function pick(group,b){document.querySelectorAll('.ex button,.lg button').forEach(x=>x.classList.remove('on'));b.classList.add('on');$('preview').style.display='none';$('droptext').style.display='block'}
-$('drop').onclick=()=>$('file').click();$('tool').onchange=()=>{$('mppl').style.display=$('tool').value?'block':'none';$('mpp').value=$('tool').value==='polyp'?0.44:0.25};
+$('drop').onclick=()=>$('file').click();$('tool').onchange=()=>{$('mppl').style.display=$('tool').value&&$('tool').value!=='auto'?'block':'none';$('mpp').value=$('tool').value==='polyp'?0.44:0.25};
 $('file').onchange=()=>{const f=$('file').files[0];if(!f)return;if(f.size>12e6){alert('The image must be ≤ 12 MB');return}const r=new FileReader();
   r.onload=()=>useImage(r.result,f.name);r.readAsDataURL(f)};
 function useImage(dataUrl,name){img=dataUrl.split(',')[1];exId=null;lgId=null;$('preview').src=dataUrl;$('preview').style.display='block';$('droptext').style.display='none';
@@ -151,7 +151,7 @@ $('mopen').onclick=async()=>{if(!mSel)return;const b=await (await fetch('/inputs
 $('reset').onclick=()=>{sid=null;$('thread').innerHTML='';$('expert').innerHTML='';$('intro').style.display='block';$('send').disabled=true;$('q').placeholder='Start a consultation on the left, then ask here';$('sugg').innerHTML=''};
 $('start').onclick=async()=>{
   if(busy)return;busy=true;$('start').disabled=true;$('thread').innerHTML='';$('expert').innerHTML='';
-  const body={context:$('ctx').value,think:$('think').checked};if(lgId)body.large_example=lgId;else if(exId)body.example_file_id=exId;else if(img){body.image_base64=img;if($('tool').value){body.expert_tool=$('tool').value;body.um_per_px=+$('mpp').value}}
+  const body={context:$('ctx').value,think:$('think').checked};if(lgId)body.large_example=lgId;else if(exId)body.example_file_id=exId;else if(img){body.image_base64=img;if($('tool').value){body.expert_tool=$('tool').value;if($('tool').value!=='auto')body.um_per_px=+$('mpp').value}}
   try{const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(d.error)throw new Error(d.error);
     sid=d.session_id;$('intro').style.display='none';window.scrollTo({top:0,behavior:'smooth'});$('send').disabled=false;$('q').placeholder='Type a question, Enter to send (Shift+Enter for a new line)';
     if(d.large)renderExpert(d.large);

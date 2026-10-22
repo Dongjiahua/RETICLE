@@ -20,6 +20,7 @@ import uuid
 from PIL import Image, ImageOps
 
 from reticle.agent.consult import Library, Session
+from reticle.agent import router
 from reticle.paths import CONFIGS, DATA
 
 BASE = DATA
@@ -150,12 +151,16 @@ def main():
                         row = by_file[req['example_file_id']]; exclude = {row['article_id']}; image = Image.open(row['image_path']).convert('RGB')
                     elif req.get('image_base64'):
                         image = ImageOps.exif_transpose(Image.open(io.BytesIO(base64.b64decode(req['image_base64'])))).convert('RGB')
-                    sid = uuid.uuid4().hex[:12]
-                    if req.get('expert_tool') in LIVE_SPEC and image is not None and not meta:
-                        mpp = float(req.get('um_per_px') or (0.25 if req['expert_tool'] == 'mitosis' else 0.44))
+                    sid = uuid.uuid4().hex[:12]; tool, routed = req.get('expert_tool'), None
+                    if tool == 'auto' and image is not None and not meta:  # the router picks the expert (or none) from the image and the case information
+                        tool = routed = router.route(a.llm_port, image, context or router.GENERIC)
+                    if tool in LIVE_SPEC and image is not None and not meta:
+                        mpp = float(req.get('um_per_px') or (0.25 if tool == 'mitosis' else 0.44))
                         if not 0.1 <= mpp <= 2.0:
                             raise ValueError('µm/px must be between 0.1 and 2.0.')
-                        meta, image, crops = live_expert(req['expert_tool'], image, mpp, sid); context = context or meta['context']
+                        meta, image, crops = live_expert(tool, image, mpp, sid); context = context or meta['context']
+                        if routed:
+                            meta['source'] += ', chosen by the router'
                     s = Session(lib, a.llm_port, image, context=context, retrieval=True, exclude=exclude, version=a.version if req.get('think') else a.fast_version,
                                 cite_retries=a.cite_retries, terms_tokens=a.terms_tokens, concise=a.concise, cite_check=a.cite_check,
                                 expert_text=(meta['expert_text']+'\nCategories used by the expert'+('' if meta.get('live') else ' and the reference')+' (option letters): '+' | '.join(meta['options'])) if meta else '',
@@ -164,7 +169,7 @@ def main():
                         sessions[sid] = dict(session=s, meta=meta, created=time.time())
                         for k in [k for k, v in sessions.items() if time.time()-v['created'] > 4*3600]:
                             sessions.pop(k, None)
-                    return self.send(200, dict(session_id=sid, large=dict(id=meta['id'], expert_text=meta['expert_text'], summary=summary(meta), crops=len(crops), boxes=meta['boxes'],
+                    return self.send(200, dict(session_id=sid, routed=routed, large=dict(id=meta['id'], expert_text=meta['expert_text'], summary=summary(meta), crops=len(crops), boxes=meta['boxes'],
                                                                           question=meta['question'], source=meta['source'], live=bool(meta.get('live'))) if meta else None))
                 if self.path == '/api/ask':
                     entry = sessions.get(req.get('session_id', ''))

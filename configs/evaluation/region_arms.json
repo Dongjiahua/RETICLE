@@ -13,7 +13,8 @@
   "levels": 2,
   "crops": "expert",
   "coarse_um": 1600,
-  "evidence": "seg3"
+  "evidence": "seg3",
+  "route": true
  },
  {
   "name": "mdg_qwen",
@@ -29,7 +30,8 @@
   "levels": 1,
   "crops": "expert",
   "n_fine": 6,
-  "evidence": "cv3"
+  "evidence": "cv3",
+  "route": true
  },
  {
   "name": "u7_qwen",
@@ -45,7 +47,8 @@
   "levels": 2,
   "crops": "expert",
   "coarse_um": 1600,
-  "evidence": "moe"
+  "evidence": "moe",
+  "route": true
  },
  {
   "name": "u8_qwen",
@@ -60,6 +63,7 @@
   "overview_px": 1024,
   "levels": 1,
   "crops": "expert",
-  "evidence": "moe"
+  "evidence": "moe",
+  "route": true
  }
 ]

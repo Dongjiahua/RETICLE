@@ -4,7 +4,8 @@ The VLM never receives one huge image. It sees the whole region as an overview o
 physical size at the regions returned by the RETICLE expert (evidence file fields 'coarse' / 'fine'), every image at most `crop_px` per side:
   level 2 (coarse): up to 3 windows of `coarse_um`, shown downsampled (e.g. 1.6 mm at ~2 um/px: architecture);
   level 1 (fine):   up to 3 fields of `fine_px` native pixels (~340 um at ~0.45 um/px: nuclei, single tumour cells).
-'crops': 'expert' = views at the expert's regions (RETICLE), 'none' = overview only (the same VLM alone). The expert's reading ('evidence':
+'crops': 'expert' = views at the expert's regions (RETICLE), 'none' = overview only (the same VLM alone). 'route': true lets the agent
+choose the expert first (reticle.agent.router, needs --api_ports); a region routed to another expert or to none gets no reading and no views. The expert's reading ('evidence':
 key of runs/<set>/evidence_<set>_<split>_<key>.jsonl, written by the expert pipelines) is given as text. An arm (JSON) sets: name, set
 (c16 | mdg | u8 | u7), evidence, crops, levels, coarse_um, fine_px, crop_px, n_coarse, n_fine, overview_px, seed, split.
   python3 -m reticle.agent.region_qa --arms arms.json --shard i --nshards n [--split test|dev] [--limit k] [--api_ports 8000,8001]"""
@@ -131,13 +132,20 @@ def main():
         qs = read_jsonl(run/f'inputs/queries_{s}_{split}.jsonl')[a.shard::a.nshards][:a.limit]
         ev = {r['id']: r for r in read_jsonl(run/f"evidence_{s}_{split}_{arm['evidence']}.jsonl")} if arm.get('evidence') else {}
         items = [Item(q, s, arm.get('overview_px', 1024)) for q in qs]
+        routed = [None]*len(items)
+        if arm.get('route'):  # the agent chooses the expert from the overview and the question
+            from reticle.agent import router
+            assert a.api_ports, 'routing calls the VLM server (--api_ports)'
+            res = llm.chat([router.conversation(it.overview, router.request_of(s, it.q)) for it in items], router.PARAMS, chat_template_kwargs=router.CHAT_KW)
+            routed = [router.parse(r.outputs[0].text) for r in res]
+        keep = [r is None or r == {'c16': 'metastasis', 'mdg': 'mitosis', 'u8': 'polyp', 'u7': 'polyp'}[s] for r in routed]
         crop_px, fine_px, nc, nf = arm.get('crop_px', 768), arm.get('fine_px', 768), arm.get('n_coarse', 3), arm.get('n_fine', 3)
         levels, mode = arm.get('levels', 0), arm.get('crops', 'none')
         coarse = [[] for _ in items]; fine = [[] for _ in items]
         if levels == 2 and mode == 'expert':  # coarse windows
             cw = [it.units(arm['coarse_um']) for it in items]
             for i, it in enumerate(items):
-                coarse[i] = [window((b[0]+b[2])/2, (b[1]+b[3])/2, *cw[i]) for b in ev[it.q['id']]['coarse'][:nc]]
+                coarse[i] = [] if not keep[i] else [window((b[0]+b[2])/2, (b[1]+b[3])/2, *cw[i]) for b in ev[it.q['id']]['coarse'][:nc]]
         coarse_ims = [[crop(it.native, b, crop_px) for b in coarse[i]] for i, it in enumerate(items)]
 
         def head(i, it):  # labelled images shown so far: overview + coarse windows
@@ -149,7 +157,7 @@ def main():
         if levels >= 1 and mode == 'expert':  # fine fields
             fu = [it.units(fine_px*it.mpp) for it in items]
             for i, it in enumerate(items):
-                fine[i] = [window((b[0]+b[2])/2, (b[1]+b[3])/2, *fu[i]) for b in ev[it.q['id']]['fine'][:nf]]
+                fine[i] = [] if not keep[i] else [window((b[0]+b[2])/2, (b[1]+b[3])/2, *fu[i]) for b in ev[it.q['id']]['fine'][:nf]]
         convs = []
         for i, it in enumerate(items):
             content = head(i, it); k0 = 2+len(coarse[i])
@@ -157,7 +165,7 @@ def main():
                 im, sc = crop(it.native, b, crop_px)
                 content += [dict(type='text', text=f'Image {k}: field {[round(v) for v in b]} of image 1 ({fmt_um(im.width*sc*it.mpp)} wide) at full resolution, {it.mpp*sc:.2f} um/px.'),
                             dict(type='image_pil', image_pil=im)]
-            pt = prompt_text(it.q, ev[it.q['id']]['text'] if ev else '')
+            pt = prompt_text(it.q, ev[it.q['id']]['text'] if ev and keep[i] else '')
             content.append(dict(type='text', text=f'Question: {pt[0]}\nOptions:\n{pt[1]}{pt[2]}\n\nThink it through, then end with a final line exactly of the form "Answer: <letter>".'))
             convs.append([dict(role='system', content=SYSTEM), dict(role='user', content=content)])
         res = llm.chat(convs, sp(arm, 8192), chat_template_kwargs=kw, use_tqdm=False)
@@ -165,7 +173,7 @@ def main():
         for i, (it, r) in enumerate(zip(items, res)):
             o = r.outputs[0]; n_img = 1+len(coarse[i])+len(fine[i])
             rows.append(dict(id=it.q['id'], arm=arm['name'], choice=parse(o.text, it.q['options']), raw=o.text[-1500:], finish=o.finish_reason, prompt_tokens=len(r.prompt_token_ids),
-                             output_tokens=len(o.token_ids), coarse=coarse[i], fine=fine[i], images=n_img))
+                             output_tokens=len(o.token_ids), coarse=coarse[i], fine=fine[i], images=n_img, **({'routed': routed[i]} if routed[i] else {})))
         tmp = path(arm).with_suffix('.tmp'); tmp.write_text(''.join(json.dumps(x)+'\n' for x in rows)); tmp.rename(path(arm))
         print(json.dumps(dict(arm=arm['name'], shard=a.shard, n=len(rows), seconds=round(time.monotonic()-began), unparsed=sum(x['choice'] is None for x in rows),
                               truncated=sum(x['finish'] == 'length' for x in rows))), flush=True)

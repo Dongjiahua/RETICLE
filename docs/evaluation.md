@@ -29,6 +29,10 @@ python -m reticle.evaluation.baselines.chat_vlms mc --model quilt --port 8980 --
 python -m reticle.evaluation.score_regions --config configs/evaluation/region_comparisons.json --out $RETICLE_DATA/results/regions_test.json
 ```
 
+The `reticle` arms set `"route": true`: the agent first chooses the expert for each region from its overview and question
+(`reticle.agent.router`), then receives that expert's reading and views. `python -m reticle.agent.router eval` checks the router on a
+sample of test items of all six benchmarks.
+
 LLaVA-Med and Quilt-LLaVA are served by vLLM (Quilt-LLaVA after `python -m reticle.evaluation.baselines.convert_llava_to_hf`).
 `score_regions` reports balanced accuracy with slide-grouped bootstrap intervals for RETICLE against each baseline. The MUSK score in
 the results table is the mean over the 10 probe seeds (`$RETICLE_DATA/runs/musk_baselines/probe.json`); seed 0 is the scored arm.

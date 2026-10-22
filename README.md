@@ -6,7 +6,7 @@
 
 RETICLE lets a general vision–language model (Qwen3.8-27B, used as released) answer pathology questions that it cannot answer from a downsampled image alone. Through one tool interface it
 
-1. **measures** with RETICLE experts, MUSK models we fine-tuned and calibrated for lymph-node metastasis sizing, mitosis counting and colorectal polyp grading;
+1. **measures** with a mixture of specialized RETICLE experts, one each for lymph-node metastasis sizing, mitosis counting and colorectal polyp grading, built on MUSK and calibrated; a router lets the agent pick the expert, or none, from the image and the question;
 2. **looks closer** at full-resolution views cut where an expert located the finding;
 3. **retrieves evidence** from published case reports, teaching image–caption pairs and NCI PDQ treatment summaries, and cites the exact source sentence for every claim it takes from them;
 4. carries the readings, views and evidence through a **multi-turn consultation** (diagnosis → work-up → treatment).
@@ -40,7 +40,7 @@ The benchmarks are described in [docs/benchmarks.md](docs/benchmarks.md); the co
 
 ```
 reticle/
-  agent/          consultation agent (consult.py), evidence index (library.py), region and image question answering (region_qa.py, vlm_qa.py)
+  agent/          consultation agent (consult.py), expert router (router.py), evidence index (library.py), region and image question answering (region_qa.py, vlm_qa.py)
   experts/        RETICLE experts: metastasis/, mitosis/, polyp/; the tool contract and its calibration (contract.py, build_contracts.py); live tools for the demo (live.py)
   library/        evidence library: published case reports (cases.py), teaching image-caption pairs (captions.py), NCI PDQ passages (pdq.py), MUSK encoding of the caption library (encode.py), caption retrieval for PathMMU (retrieve_captions.py)
   benchmarks/     builders of CAMELYON16-MS, MIDOG-MS, UniToPatho-MS, MultiCaRe-Dx and the PathMMU inputs
@@ -94,7 +94,7 @@ The order of a full reproduction:
 2. **Benchmarks**: `python -m reticle.benchmarks.camelyon16_ms`, `midog_ms`, `unitopatho_ms`, `multicare_dx` (from the case library), `pathmmu` (after the caption library); each module's docstring lists its steps.
 3. **Experts**: train, cross-fit and calibrate the experts. The metastasis expert (`reticle.experts.metastasis.segmenter`) and the mitosis expert (`reticle.experts.mitosis.crossfit`) write their records with their `read` step; the polyp expert (`reticle.experts.polyp.mixture`) is calibrated by `reticle.experts.build_contracts u8 u7`. Each module's docstring lists its steps in order, and the record format is described in [docs/expert_interface.md](docs/expert_interface.md). The trained experts are not included (see *Expert weights* above).
 4. **Caption vectors and PathMMU evidence**: MUSK vectors of the caption library and the PathMMU images (`reticle.library.encode`), then the caption retrieval for PathMMU (`reticle.library.retrieve_captions`).
-5. **RETICLE, baselines and scoring**: region questions (`reticle.agent.region_qa`, `reticle.evaluation.score_regions`), PathMMU (`reticle.agent.vlm_qa`, `reticle.evaluation.score_pathmmu`), consultations (`reticle.evaluation.consultation`), and the MUSK, LLaVA-Med and Quilt-LLaVA baselines (`reticle.evaluation.baselines`); [docs/evaluation.md](docs/evaluation.md) lists the commands.
+5. **RETICLE, baselines and scoring**: region questions (`reticle.agent.region_qa`, which routes each question to its expert with `reticle.agent.router`, and `reticle.evaluation.score_regions`), PathMMU (`reticle.agent.vlm_qa`, `reticle.evaluation.score_pathmmu`), consultations (`reticle.evaluation.consultation`), and the MUSK, LLaVA-Med and Quilt-LLaVA baselines (`reticle.evaluation.baselines`); [docs/evaluation.md](docs/evaluation.md) lists the commands.
 
 Every entry point prints its options with `python -m <module> --help`; `tests/` holds unit tests for the citation check and the expert calibration (`pytest tests`).
 
@@ -104,7 +104,7 @@ Every entry point prints its options with `python -m <module> --help`; `tests/` 
 python -m reticle.demo.server --port 8875 --llm-port 8930
 ```
 
-then open `http://127.0.0.1:8875`. The page offers large-image benchmark examples with expert readings (built by `reticle.demo.examples`), published case images, uploads and files from a local folder (`--inputs`); an uploaded breast-cancer field or colorectal polyp region can be read live by the mitosis or polyp expert. The live mitosis expert loads the five fine-tuned detectors written by `reticle.experts.mitosis.crossfit`, so it needs the experts trained first; the polyp expert refits its classifiers on the cached MUSK features of the training regions. Every citation opens its source sentence. The server binds to the loopback interface only.
+then open `http://127.0.0.1:8875`. The page offers large-image benchmark examples with expert readings (built by `reticle.demo.examples`), published case images, uploads and files from a local folder (`--inputs`); an uploaded breast-cancer field or colorectal polyp region can be read live by the mitosis or polyp expert, chosen by hand or by the router from the case information. The live mitosis expert loads the five fine-tuned detectors written by `reticle.experts.mitosis.crossfit`, so it needs the experts trained first; the polyp expert refits its classifiers on the cached MUSK features of the training regions. Every citation opens its source sentence. The server binds to the loopback interface only.
 
 ## Notes
 
