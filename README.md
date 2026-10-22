@@ -13,7 +13,7 @@ RETICLE lets a general vision–language model (Qwen3.8-27B, used as released) a
 
 <p align="center"><img src="assets/reticle_walkthrough.gif" width="820" alt="RETICLE on a CAMELYON16-MS test region: expert reading, full-resolution views, retrieved evidence and a cited answer"></p>
 
-A recording of the interactive demo (a breast-cancer field opened from a folder, the mitosis expert run live, a cited follow-up answer) is in [assets/reticle_demo.mp4](assets/reticle_demo.mp4).
+A recording of the interactive demo (a breast-cancer field opened from a folder, the router picking the mitosis expert, which runs live, and a follow-up answer whose [E] marks open their source sentences) is in [assets/reticle_demo.mp4](assets/reticle_demo.mp4).
 
 ## Results
 
