@@ -1,6 +1,6 @@
-"""Score PathMMU arms against the frozen answers: accuracy per arm and source, and paired differences versus a reference arm with an
+"""Score PathMMU arms against the frozen answers: accuracy per arm and source, and, with --reference, paired differences versus that arm with an
 image-grouped bootstrap (10,000 replicates). Answers are read from runs/pathmmu_v3/qa/<arm>.<split>.<shard>.jsonl (reticle/agent/vlm_qa.py).
-  python -m reticle.evaluation.score_pathmmu --split test --reference qwen --out $RETICLE_DATA/results/pathmmu_test.json"""
+  python -m reticle.evaluation.score_pathmmu --split test --out $RETICLE_DATA/results/pathmmu_test.json"""
 import argparse
 from collections import defaultdict
 import json
@@ -20,7 +20,7 @@ def main():
     p.add_argument('--qa', default=str(DATA/'runs/pathmmu_v3/qa'))
     p.add_argument('--gold', default=str(DATA/'scoring/pathmmu_v3/gold.jsonl'))
     p.add_argument('--split', required=True)
-    p.add_argument('--reference', required=True)
+    p.add_argument('--reference', default=None)
     p.add_argument('--out', required=True)
     a = p.parse_args()
     gold = {g['id']: g for g in read_jsonl(a.gold) if g['split'] == a.split}

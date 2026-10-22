@@ -1,12 +1,5 @@
 [
  {
-  "name": "c16_qwen",
-  "set": "c16",
-  "overview_px": 1024,
-  "levels": 0,
-  "crops": "none"
- },
- {
   "name": "c16_reticle",
   "set": "c16",
   "overview_px": 1024,
@@ -15,13 +8,6 @@
   "coarse_um": 1600,
   "evidence": "seg3",
   "route": true
- },
- {
-  "name": "mdg_qwen",
-  "set": "mdg",
-  "overview_px": 1024,
-  "levels": 0,
-  "crops": "none"
  },
  {
   "name": "mdg_reticle",
@@ -34,13 +20,6 @@
   "route": true
  },
  {
-  "name": "u7_qwen",
-  "set": "u7",
-  "overview_px": 1024,
-  "levels": 0,
-  "crops": "none"
- },
- {
   "name": "u7_reticle",
   "set": "u7",
   "overview_px": 1024,
@@ -49,13 +28,6 @@
   "coarse_um": 1600,
   "evidence": "moe",
   "route": true
- },
- {
-  "name": "u8_qwen",
-  "set": "u8",
-  "overview_px": 1024,
-  "levels": 0,
-  "crops": "none"
  },
  {
   "name": "u8_reticle",

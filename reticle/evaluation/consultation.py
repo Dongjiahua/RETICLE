@@ -2,9 +2,7 @@
 judge of the first-turn diagnosis (the same VLM, text only, sees the gold fields and one answer at a time, never the arm), and the paired
 summary.
 
-Arms (both reticle/agent/consult.py version 5: figure + presentation, reasoning):
-  qwen      the same VLM without retrieval
-  reticle   + evidence retrieval and cited answers
+Arm reticle: reticle/agent/consult.py version 5 (figure + presentation, reasoning) with evidence retrieval.
 Baselines answered by reticle/evaluation/baselines: musk (nearest published case), llavamed, quilt.
 Metrics: t1_top1 (same disease entity as the gold diagnosis), t1_top3 (gold among the differential). Paired item bootstrap (10,000
 replicates).
@@ -28,7 +26,7 @@ RUN = BASE/'runs/mcdx_v1'
 GOLD = BASE/'scoring/mcdx_v1/gold.jsonl'
 CFG = json.loads((CONFIGS/'evaluation/consultation.json').read_text())   # the questions of the reported runs (verbatim)
 T1, T2, T3 = CFG['turns']['t1'], CFG['turns']['t2'], CFG['turns']['t3']
-ARMS = {'qwen': False, 'reticle': True}   # arm: evidence retrieval
+ARMS = {'reticle': True}   # arm: evidence retrieval
 REFERENCES = ('musk', 'llavamed', 'quilt')   # baselines answered by reticle/evaluation/baselines
 
 
@@ -124,7 +122,7 @@ def summary():
     res = dict(arms={}, comparisons=[]); rng = np.random.default_rng(0)
     for a, d in arms.items():
         res['arms'][a] = {m: (round(100*float(np.mean(v)), 2), len(v)) for m, f in metrics.items() for v in [[f(j) for j in d.values()]] if v}
-    for x, y in [('reticle', r) for r in ('qwen',)+REFERENCES]:
+    for x, y in [('reticle', r) for r in REFERENCES]:
         for m, f in metrics.items():
             ids = [i for i in arms[x] if i in arms[y]]
             if not ids:

@@ -1,11 +1,5 @@
 [
  {
-  "name": "qwen",
-  "max_pixels": 4194304,
-  "effort": "low",
-  "max_tokens": 8192
- },
- {
   "name": "reticle",
   "max_pixels": 4194304,
   "evidence": "evidence_fused_{split}.jsonl",

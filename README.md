@@ -17,16 +17,16 @@ A recording of the interactive demo (a breast-cancer field opened from a folder,
 
 ## Results
 
-Test-set scores (%): balanced accuracy, PathMMU accuracy and MultiCaRe-Dx top-1 diagnosis. *Qwen3.8-27B* is the same VLM answering directly, without RETICLE's experts, views and evidence. *MUSK* is the standard use of the foundation model: a linear probe (mean of 10 seeds), zero-shot on PathMMU, and the nearest published case on MultiCaRe-Dx. *LLaVA-Med* (v1.5) and *Quilt-LLaVA* (v1.5-7B) are pathology VLMs given the same images and questions.
+Test-set scores (%): balanced accuracy, PathMMU accuracy and MultiCaRe-Dx top-1 diagnosis. *MUSK* is the standard use of the foundation model: a linear probe (mean of 10 seeds), zero-shot on PathMMU, and the nearest published case on MultiCaRe-Dx. *LLaVA-Med* (v1.5) and *Quilt-LLaVA* (v1.5-7B) are pathology VLMs given the same images and questions.
 
-| Benchmark (test items) | RETICLE | Qwen3.8-27B | MUSK | LLaVA-Med | Quilt-LLaVA |
-|---|---:|---:|---:|---:|---:|
-| CAMELYON16-MS, metastasis size (188) | **72.1** | 28.6 | 42.2 | 29.0 | 26.0 |
-| MIDOG-MS, mitosis count (240) | **66.5** | 31.4 | 36.7 | 24.6 | 25.0 |
-| UniToPatho-MS 800 µm, polyp type and grade (2,399) | **53.4**¹ | 22.2 | 48.2 | 21.0 | 22.4 |
-| UniToPatho-MS 7 mm, polyp type and grade (248) | **49.2** | 21.1 | 42.4 | 11.6 | 13.2 |
-| PathMMU, pathology QA (4,538) | **75.3** | 72.4 | 47.7 | 15.7 | 42.8 |
-| MultiCaRe-Dx, case diagnosis top-1 (1,000) | **42.7** | 39.3 | 4.5 | 12.9 | 11.8 |
+| Benchmark (test items) | RETICLE | MUSK | LLaVA-Med | Quilt-LLaVA |
+|---|---:|---:|---:|---:|
+| CAMELYON16-MS, metastasis size (188) | **72.1** | 42.2 | 29.0 | 26.0 |
+| MIDOG-MS, mitosis count (240) | **66.5** | 36.7 | 24.6 | 25.0 |
+| UniToPatho-MS 800 µm, polyp type and grade (2,399) | **53.4**¹ | 48.2 | 21.0 | 22.4 |
+| UniToPatho-MS 7 mm, polyp type and grade (248) | **49.2** | 42.4 | 11.6 | 13.2 |
+| PathMMU, pathology QA (4,538) | **75.3** | 47.7 | 15.7 | 42.8 |
+| MultiCaRe-Dx, case diagnosis top-1 (1,000) | **42.7** | 4.5 | 12.9 | 11.8 |
 
 ¹ The polyp expert's reading; the agent's own answer with the reading and the views reaches 47.6.
 
@@ -50,7 +50,7 @@ reticle/
   image_io.py     PNG decoding limits for library images with large ICC profiles
   paths.py        data root (RETICLE_DATA)
 configs/          models.json, experts/ (training recipes), evaluation/ (agent arms, consultation prompts), library_cases.json (MultiCaRe release and excluded articles), pathmmu.json (caption library decontamination), demo examples
-docs/             expert interface, benchmarks, evaluation map
+docs/             expert training, expert interface, benchmarks, evaluation map
 docker/           runtime image
 assets/           figures and videos for this README
 ```
@@ -73,7 +73,7 @@ docker run --gpus '"device=0"' --ipc host -p 127.0.0.1:8930:8930 vllm/vllm-opena
   --max-model-len 32768 --limit-mm-per-prompt '{"image":8}' --enable-prefix-caching
 ```
 
-**Expert weights.** The trained expert checkpoints are not released because MUSK's licence does not permit it. MUSK is distributed under CC-BY-NC-ND 4.0, which does not allow sharing adapted versions of the model, and its terms of use, accepted when downloading it, forbid distributing copies of it. The metastasis and mitosis experts fine-tune the whole MUSK backbone, so their checkpoints are modified copies of MUSK. Anyone who has accepted MUSK's terms can train the experts with the steps under *Usage*.
+**Expert weights.** The trained expert checkpoints are not released because MUSK's licence does not permit it. MUSK is distributed under CC-BY-NC-ND 4.0, which does not allow sharing adapted versions of the model, and its terms of use, accepted when downloading it, forbid distributing copies of it. The metastasis and mitosis experts fine-tune the whole MUSK backbone, so their checkpoints are modified copies of MUSK. Anyone who has accepted MUSK's terms can train the experts with [docs/expert_training.md](docs/expert_training.md).
 
 **Data.** Set `RETICLE_DATA` to a data root; benchmark builders, expert training, the evidence library and evaluation read and write below it. Source datasets are not redistributed: CAMELYON16 and CAMELYON17 (CC0), MIDOG 2021 (CC BY 4.0) and MIDOG++ (CC0), UniToPatho, PathMMU, the MultiCaRe case-report collection (CC BY / CC0 articles), Quilt-1M, a PathGen sample and the NCI PDQ cancer treatment summaries. See [docs/benchmarks.md](docs/benchmarks.md) for where each comes from and how it is laid out.
 
@@ -92,7 +92,7 @@ The order of a full reproduction:
 
 1. **Evidence library**: published case reports (`reticle.library.cases download`, `build`, `encode`), teaching image–caption pairs (`reticle.library.captions`, which also extracts the PathMMU question images) and NCI PDQ passages (`reticle.library.pdq`); [docs/benchmarks.md](docs/benchmarks.md#evidence-library--reticlelibrary) lists the sources.
 2. **Benchmarks**: `python -m reticle.benchmarks.camelyon16_ms`, `midog_ms`, `unitopatho_ms`, `multicare_dx` (from the case library), `pathmmu` (after the caption library); each module's docstring lists its steps.
-3. **Experts**: train, cross-fit and calibrate the experts. The metastasis expert (`reticle.experts.metastasis.segmenter`) and the mitosis expert (`reticle.experts.mitosis.crossfit`) write their records with their `read` step; the polyp expert (`reticle.experts.polyp.mixture`) is calibrated by `reticle.experts.build_contracts u8 u7`. Each module's docstring lists its steps in order, and the record format is described in [docs/expert_interface.md](docs/expert_interface.md). The trained experts are not included (see *Expert weights* above).
+3. **Experts**: train, cross-fit and calibrate the three experts with the commands in [docs/expert_training.md](docs/expert_training.md), in order. The record format is described in [docs/expert_interface.md](docs/expert_interface.md). The trained experts are not included (see *Expert weights* above).
 4. **Caption vectors and PathMMU evidence**: MUSK vectors of the caption library and the PathMMU images (`reticle.library.encode`), then the caption retrieval for PathMMU (`reticle.library.retrieve_captions`).
 5. **RETICLE, baselines and scoring**: region questions (`reticle.agent.region_qa`, which routes each question to its expert with `reticle.agent.router`, and `reticle.evaluation.score_regions`), PathMMU (`reticle.agent.vlm_qa`, `reticle.evaluation.score_pathmmu`), consultations (`reticle.evaluation.consultation`), and the MUSK, LLaVA-Med and Quilt-LLaVA baselines (`reticle.evaluation.baselines`); [docs/evaluation.md](docs/evaluation.md) lists the commands.
 

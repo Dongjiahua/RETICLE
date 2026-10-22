@@ -1,11 +1,7 @@
 {
- "_comment": "RETICLE against the baselines of the results table, scored by reticle/evaluation/score_regions.py. <set>_reticle: the agent with the expert reading and the views at the expert's regions; <set>_qwen: the same VLM alone; <set>_musk: MUSK linear probe; <set>_llavamed / <set>_quilt: LLaVA-Med / Quilt-LLaVA. On UniToPatho-MS 800 um the reported RETICLE score is the polyp expert's reading (u8_reticle_expert).",
+ "_comment": "RETICLE against the baselines of the results table, scored by reticle/evaluation/score_regions.py. <set>_reticle: the agent with the expert reading and the views at the expert's regions; <set>_musk: MUSK linear probe; <set>_llavamed / <set>_quilt: LLaVA-Med / Quilt-LLaVA. On UniToPatho-MS 800 um the reported RETICLE score is the polyp expert's reading (u8_reticle_expert).",
  "comparisons": {
   "c16": [
-   [
-    "c16_reticle",
-    "c16_qwen"
-   ],
    [
     "c16_reticle",
     "c16_musk"
@@ -22,10 +18,6 @@
   "mdg": [
    [
     "mdg_reticle",
-    "mdg_qwen"
-   ],
-   [
-    "mdg_reticle",
     "mdg_musk"
    ],
    [
@@ -38,10 +30,6 @@
    ]
   ],
   "u7": [
-   [
-    "u7_reticle",
-    "u7_qwen"
-   ],
    [
     "u7_reticle",
     "u7_musk"
@@ -58,10 +46,6 @@
   "u8": [
    [
     "u8_reticle_expert",
-    "u8_qwen"
-   ],
-   [
-    "u8_reticle_expert",
     "u8_musk"
    ],
    [
@@ -71,10 +55,6 @@
    [
     "u8_reticle_expert",
     "u8_quilt"
-   ],
-   [
-    "u8_reticle",
-    "u8_qwen"
    ]
   ]
  }

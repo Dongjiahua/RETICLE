@@ -243,7 +243,7 @@ class Session:
         prompt and citation check; 3 = + differential-driven retrieval on the first turn (the model lists up to five candidate diagnoses whose
         published cases are retrieved by title; the relevance gate keeps up to ten items); 5 = 3 + reasoning (thinking) before the answer;
         11 = 5 + on treatment questions the answer first lists the standard treatment options for the leading diagnosis, then what the similar
-        published cases received. RETICLE uses version 5 on MultiCaRe-Dx (arms reticle and qwen), version 3 in the demo's fast mode and
+        published cases received. RETICLE uses version 5 on MultiCaRe-Dx, version 3 in the demo's fast mode and
         version 11 in its deep mode."""
         assert version in VERSIONS, version
         self.lib, self.port, self.image, self.context, self.version = lib, port, image, context.strip(), version

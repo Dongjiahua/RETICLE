@@ -4,7 +4,7 @@ The VLM never receives one huge image. It sees the whole region as an overview o
 physical size at the regions returned by the RETICLE expert (evidence file fields 'coarse' / 'fine'), every image at most `crop_px` per side:
   level 2 (coarse): up to 3 windows of `coarse_um`, shown downsampled (e.g. 1.6 mm at ~2 um/px: architecture);
   level 1 (fine):   up to 3 fields of `fine_px` native pixels (~340 um at ~0.45 um/px: nuclei, single tumour cells).
-'crops': 'expert' = views at the expert's regions (RETICLE), 'none' = overview only (the same VLM alone). 'route': true lets the agent
+'crops': 'expert' = views at the expert's regions (RETICLE), 'none' = overview only. 'route': true lets the agent
 choose the expert first (reticle.agent.router, needs --api_ports); a region routed to another expert or to none gets no reading and no views. The expert's reading ('evidence':
 key of runs/<set>/evidence_<set>_<split>_<key>.jsonl, written by the expert pipelines) is given as text. An arm (JSON) sets: name, set
 (c16 | mdg | u8 | u7), evidence, crops, levels, coarse_um, fine_px, crop_px, n_coarse, n_fine, overview_px, seed, split.
