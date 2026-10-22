@@ -44,7 +44,7 @@ h2{font-size:18px;margin:0 0 10px}h3{font-size:14px;margin:14px 0 6px;color:var(
 .turn{margin-bottom:20px}.q{background:var(--user);border-radius:14px 14px 4px 14px;padding:10px 14px;margin:0 0 10px auto;max-width:80%;width:fit-content}
 .a .answer{font-size:15.5px;line-height:1.8;white-space:pre-wrap}
 .cite{border:0;background:#DDF0EC;color:var(--teal2);border-radius:5px;font-size:11px;font-weight:700;padding:0 5px;margin:0 1px;cursor:pointer;vertical-align:super}
-.cite:hover{background:var(--teal);color:#fff}
+.cite:hover{background:var(--teal);color:#fff} .q,#expert .card{scroll-margin-top:92px} .pop{position:fixed;z-index:60;background:#fff;border:2px solid var(--teal);border-radius:12px;box-shadow:0 14px 36px rgba(20,33,61,.2);padding:12px 14px;font-size:14.5px;line-height:1.6} .pop .h{font-size:12px;color:var(--muted);margin-bottom:6px} .pop mark{background:#FFF1B8;padding:1px 2px}
 table.dx{border-collapse:collapse;width:100%;font-size:14px}table.dx td,table.dx th{border-bottom:1px solid var(--line);padding:7px 8px;text-align:left;vertical-align:top}table.dx th{color:var(--muted);font-weight:600;white-space:nowrap}table.dx td:nth-child(2){white-space:nowrap}table.dx td:first-child{min-width:120px;font-weight:600}
 .lk{display:inline-block;font-size:11px;border-radius:999px;padding:1px 8px}.lk.high{background:#DDF0EC;color:var(--teal2)}.lk.medium{background:#FFF1D6;color:#8A5A00}.lk.low{background:#EDF2F4;color:#4F6774}
 ul.small{margin:4px 0;padding-left:20px;font-size:14px}
@@ -172,9 +172,15 @@ $('send').onclick=ask;$('q').addEventListener('keydown',e=>{if(e.key==='Enter'&&
 function renderAnswer(parent,text){text=text.replace(/\s+[-•]\s+(?=[A-Z(])/g,'\n- ');const lines=text.split(/\n+/).map(x=>x.trim()).filter(Boolean);if(lines.length<2){citeText(parent,text);return}parent.style.whiteSpace='normal';
   lines.forEach((x,k)=>{const pt=/^[-•*]\s+/.test(x);const d=el('div',pt?'pt':(k===0?'concl':''));citeText(d,pt?x.replace(/^[-•*]\s+/,''):x);parent.appendChild(d)})}
 function citeText(parent,text){const parts=text.split(/(\[E\d+\.\d+\])/);parts.forEach(p=>{const m=p.match(/^\[(E\d+)\.(\d+)\]$/);
-  if(m){const b=el('button','cite',m[1]+'.'+m[2]);b.onclick=()=>focusSent(m[1],+m[2]);parent.appendChild(b)}else parent.appendChild(document.createTextNode(p))})}
-function focusSent(eid,k){const card=EV[eid];if(!card)return;document.querySelectorAll('.ev.focus').forEach(x=>x.classList.remove('focus'));document.querySelectorAll('.sents span.on').forEach(x=>x.classList.remove('on'));
-  let d=card.closest('details');if(d)d.open=true;card.classList.add('focus');const s=card.querySelector('[data-k="'+k+'"]');if(s){s.classList.add('on');s.scrollIntoView({block:'center',behavior:'smooth'})}else card.scrollIntoView({block:'center',behavior:'smooth'})}
+  if(m){const b=el('button','cite',m[1]+'.'+m[2]);b.onclick=()=>focusSent(m[1],+m[2],b);parent.appendChild(b)}else parent.appendChild(document.createTextNode(p))})}
+function focusSent(eid,k,btn){const card=EV[eid];if(!card)return;document.querySelectorAll('.ev.focus').forEach(x=>x.classList.remove('focus'));document.querySelectorAll('.sents span.on').forEach(x=>x.classList.remove('on'));
+  card.classList.add('focus');const s=card.querySelector('[data-k="'+k+'"]');if(s)s.classList.add('on');document.querySelectorAll('.pop').forEach(x=>x.remove());
+  if(!btn){let d=card.closest('details');if(d)d.open=true;(s||card).scrollIntoView({block:'center',behavior:'smooth'});return}
+  // a clicked [E] mark: its source sentence opens in a card next to the mark, without scrolling the conversation
+  const p=el('div','pop');const b=card.querySelector('.badge'),h=card.querySelector('.top > div > div');p.appendChild(el('div','h',(b?b.textContent:eid)+(h&&h.textContent?' — '+h.textContent:'')));
+  p.appendChild(el('mark',null,s?s.textContent.trim():''));document.body.appendChild(p);const r=btn.getBoundingClientRect(),w=Math.min(480,innerWidth-32);p.style.width=w+'px';
+  p.style.left=Math.max(16,Math.min(r.left-w/2,innerWidth-w-16))+'px';let top=r.bottom+8;if(top+p.offsetHeight>innerHeight-180)top=Math.max(90,r.top-8-p.offsetHeight);p.style.top=top+'px';
+  setTimeout(()=>document.addEventListener('click',function c(ev){if(!p.contains(ev.target)){p.remove();document.removeEventListener('click',c)}}),0)}
 function evCard(e,cited){const c=el('div','ev');EV[e.evidence_id]=c;const top=el('div','top');
   if(e.image){const i=el('img');i.src=e.image;i.loading='lazy';top.appendChild(i)}const t=el('div');
   const kind={case:['case','published case'],caption:['','teaching caption'],nci:['nci','NCI PDQ']}[e.kind];t.appendChild(el('span','badge '+kind[0],e.evidence_id+' · '+kind[1]));
